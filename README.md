@@ -32,3 +32,12 @@ flutter run
 
 
 https://pub.dev/packages/record
+
+
+ 
+
+// ToD0 :
+
+1. Firebase 
+2. Microphone and Permission 
+3. Wisper Choosing Package 
