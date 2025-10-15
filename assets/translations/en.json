@@ -1,0 +1,8 @@
+{
+  "app_title": "Graduation App",
+  "home_title": "Home",
+  "settings": "Settings",
+  "toggle_theme": "Toggle Theme",
+  "increment": "Increment",
+  "counter_value": "Counter: {0}"
+}
