@@ -25,3 +25,10 @@ flutter run
 - Brand color: #04E9C7 applied as primary/secondary/background.
 - Toggle theme from the AppBar action on Home.
 - Update `assets/images` and `assets/icons` with real files as needed.
+
+
+
+
+
+
+https://pub.dev/packages/record
