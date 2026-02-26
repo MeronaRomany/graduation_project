@@ -7,7 +7,7 @@ class ColorsManager {
 
   // Light mode surfaces
   static const Color lightSurface = Colors.white;
-  static const Color lightBackground = Color(0xFF04E9C7);
+  static const Color lightBackground = Colors.white;
   static const Color lightAppBarForeground = Colors.black;
 
   // Dark mode surfaces
