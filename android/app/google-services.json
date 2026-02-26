@@ -12,7 +12,20 @@
           "package_name": "com.buildagon.fluentify"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "796522565005-95dfvnparsecnqc6bjso7t51sb175uvs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.buildagon.fluentify",
+            "certificate_hash": "27e9584225376a5a96a4620ac67a6ec5f5e0a291"
+          }
+        },
+        {
+          "client_id": "796522565005-sk078t9nd05tq7p3aebmq9rt7ln14b90.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA4l1PyHnzLXKZnxtW-ReAIlNpi8M-DznE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "796522565005-sk078t9nd05tq7p3aebmq9rt7ln14b90.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "796522565005-srvba44t4p4s8gq3maqi9qhcq13n96d7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.buildagon.fluentify"
+              }
+            }
+          ]
         }
       }
     }

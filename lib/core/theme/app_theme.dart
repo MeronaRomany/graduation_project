@@ -7,7 +7,7 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: ColorsManager.primary,
         brightness: Brightness.light,
-        primary: ColorsManager.primary,
+        primary: ColorsManager.lightSurface,
         secondary: ColorsManager.accent,
         surface: ColorsManager.lightSurface,
         background: ColorsManager.lightBackground,
@@ -24,6 +24,9 @@ class AppTheme {
       ),
       useMaterial3: true,
       fontFamily: 'Inter',
+
+
+
     );
   }
 
