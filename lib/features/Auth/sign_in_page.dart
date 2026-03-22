@@ -70,7 +70,13 @@ class _SignInPageState extends State<SignInPage> {
 
                       labelStyle: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),),
+                        borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide(
+                            color: Color(0xff4A249D),
+                            width: 2.0,
+                          ),
+
+                        ),
                       enabledBorder:  OutlineInputBorder(
                         borderSide: BorderSide(color: Color(0xff4A249D),width: 2.0),
                       )),
@@ -111,6 +117,10 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(
+                        color: Color(0xff4A249D),
+                        width: 2.0,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
@@ -167,6 +177,7 @@ class _SignInPageState extends State<SignInPage> {
                       });
                     }
                   },
+
                   child: Container(
                     height: 50,
                     width: double.infinity,
