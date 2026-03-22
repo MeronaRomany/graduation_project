@@ -58,6 +58,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(
+                        color: Color(0xff4A249D),
+                        width: 2.0,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
@@ -94,6 +98,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(
+                        color: Color(0xff4A249D),
+                        width: 2.0,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
@@ -136,6 +144,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(
+                        color: Color(0xff4A249D),
+                        width: 2.0,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
@@ -162,6 +174,13 @@ class _SignUpPageState extends State<SignUpPage> {
                           username.text,
                           email.text,
                         );
+                        final user = FirebaseAuth.instance.currentUser;
+
+                        if (user != null && !user.emailVerified) {
+                          await user.sendEmailVerification();
+
+                          print("✅ Verification Email Sent");
+                        }
 
                         showDialog(
                           context: context,
