@@ -14,7 +14,7 @@ class CustomBottomNavigationBar extends StatefulWidget {
 }
 
 class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
-  List<String> titles = ['Home', 'Friends', 'Practice'];
+  List<String> titles = ['Home', 'Friends', 'Chat Practice'];
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +39,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
+            textDirection: TextDirection.ltr ,
             children: List.generate(
               titles.length,
               (index) {
