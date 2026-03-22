@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:text_to_speech/text_to_speech.dart';
+
+import 'package:flutter_tts/flutter_tts.dart';
 
 enum TTSState {
   idle,
@@ -11,7 +12,7 @@ enum TTSState {
 }
 
 class TTSService {
-  TextToSpeech? _tts;
+  FlutterTts? _tts;
   bool _isInitialized = false;
   bool _isSpeaking = false;
   double _speechRate = 1.0;
@@ -33,11 +34,11 @@ class TTSService {
     try {
       _stateController.add(TTSState.initializing);
 
-      _tts = TextToSpeech();
+      _tts = FlutterTts();
 
       // Test if TTS is available
       final bool isLanguageAvailable =
-          await _tts!.getLanguages().then((languages) {
+          await _tts!.getLanguages.then((languages) {
         return languages.contains(_language);
       }).catchError((_) => false);
 
@@ -46,7 +47,7 @@ class TTSService {
       }
 
       await _tts!.setLanguage(_language);
-      await _tts!.setRate(_speechRate);
+      await _tts!.setSpeechRate(_speechRate);
       await _tts!.setVolume(_volume);
 
       _isInitialized = true;
@@ -123,7 +124,7 @@ class TTSService {
     }
 
     try {
-      await _tts!.resume();
+       _tts!.continueHandler;
       _stateController.add(TTSState.speaking);
       print('TTS resumed');
     } catch (e) {
@@ -137,7 +138,7 @@ class TTSService {
 
     try {
       _speechRate = rate.clamp(0.1, 2.0);
-      await _tts!.setRate(_speechRate);
+      await _tts!.setSpeechRate(_speechRate);
       print('Speech rate set to: $_speechRate');
     } catch (e) {
       print('Error setting speech rate: $e');
@@ -172,7 +173,7 @@ class TTSService {
     if (!_isInitialized) return [];
 
     try {
-      return await _tts!.getLanguages();
+      return await _tts!.getLanguages;
     } catch (e) {
       print('Error getting languages: $e');
       return [];
