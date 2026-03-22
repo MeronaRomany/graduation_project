@@ -2,6 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ForgetPasswordPage extends StatelessWidget {
+
+  static const routeName = '/forget-password';
+
   const ForgetPasswordPage({super.key});
 
   @override

@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:graduation_app/features/Auth/forget_password.dart';
+import 'package:graduation_app/features/Auth/sign_up_page.dart';
+import 'package:graduation_app/features/home/presentation/view/home_view.dart';
+import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 
 import 'google_sign_in.dart';
 
-
 class SignInPage extends StatefulWidget {
+  static const String routeName = "signIn";
   const SignInPage({super.key});
 
   @override
@@ -40,7 +43,6 @@ class _SignInPageState extends State<SignInPage> {
                   'welcome Back You\'ve Been Missed',
                   style: TextStyle(
                     fontSize: 20,
-
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
                   ),
@@ -48,13 +50,12 @@ class _SignInPageState extends State<SignInPage> {
 
                 TextFormField(
                   controller: email,
-                  validator: ( value){
+                  validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please, enter your email";
                     }
 
-                    String pattern =
-                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+                    String pattern = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
                     RegExp regex = RegExp(pattern);
 
                     if (!regex.hasMatch(value)) {
@@ -67,23 +68,21 @@ class _SignInPageState extends State<SignInPage> {
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                       labelText: 'Email',
-
-                      labelStyle: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),
+                      labelStyle:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                          borderSide: BorderSide(
-                            color: Color(0xff4A249D),
-                            width: 2.0,
-                          ),
-
+                        borderSide: BorderSide(
+                          color: Color(0xff4A249D),
+                          width: 2.0,
                         ),
-                      enabledBorder:  OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xff4A249D),width: 2.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xff4A249D), width: 2.0),
                       )),
-
                 ),
                 // SizedBox(height: 10,),
-
 
                 TextFormField(
                   controller: password,
@@ -99,7 +98,6 @@ class _SignInPageState extends State<SignInPage> {
                   style: TextStyle(fontSize: 20),
                   textInputAction: TextInputAction.search,
                   obscureText: isNotVisible,
-
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: TextStyle(
@@ -131,8 +129,8 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: (){
-                    Navigator.pushNamed(context, "forgetPassword");
+                  onTap: () {
+                    Navigator.pushNamed(context, ForgetPasswordPage.routeName);
                   },
                   child: Align(
                     alignment: Alignment.centerRight,
@@ -148,7 +146,7 @@ class _SignInPageState extends State<SignInPage> {
                 ),
 
                 GestureDetector(
-                  onTap: ()async {
+                  onTap: () async {
                     if (formkey.currentState!.validate()) {
                       await FirebaseAuth.instance
                           .signInWithEmailAndPassword(
@@ -164,20 +162,20 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         );
 
-                        Navigator.pushReplacementNamed(context, "homePage");
-                      })
-                          .catchError((error) {
+                        Navigator.pushReplacementNamed(
+                            context, MainView.routeName);
+                      }).catchError((error) {
                         showDialog(
                           context: context,
                           builder: (context) => const AlertDialog(
                             title: Text("Login unsuccessful"),
-                            content: Text("Please check your email or password."),
+                            content:
+                                Text("Please check your email or password."),
                           ),
                         );
                       });
                     }
                   },
-
                   child: Container(
                     height: 50,
                     width: double.infinity,
@@ -199,17 +197,23 @@ class _SignInPageState extends State<SignInPage> {
                 ),
 
                 Spacer(),
-                Text("Or SignIn" ,style: TextStyle(color: Colors.grey,fontSize: 18),textAlign: TextAlign.center,),
+                Text(
+                  "Or SignIn",
+                  style: TextStyle(color: Colors.grey, fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
 
-                    ElevatedButton.icon(
-                        onPressed: ()async{
-                          await AuthWithGoogle.signInWithGoogle(context);
-                        },
-                        label: Text("Sign in with Google",style: TextStyle(color: Colors.black,fontSize: 18)),
-                       icon: Icon(Icons.g_mobiledata_rounded,size: 30,color:Colors.deepPurple,)),
-
-
-
+                ElevatedButton.icon(
+                    onPressed: () async {
+                      await AuthWithGoogle.signInWithGoogle(context);
+                    },
+                    label: Text("Sign in with Google",
+                        style: TextStyle(color: Colors.black, fontSize: 18)),
+                    icon: Icon(
+                      Icons.g_mobiledata_rounded,
+                      size: 30,
+                      color: Colors.deepPurple,
+                    )),
 
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -221,22 +225,20 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, "Signup");
+                          Navigator.pushNamed(context, SignUpPage.routeName);
                         },
                         child: Text(
                           'Sign up for free',
                           style: TextStyle(
                             decoration: TextDecoration.underline,
                             fontSize: 16,
-                              color: Colors.grey,
-
+                            color: Colors.grey,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
               ],
             ),
           ),

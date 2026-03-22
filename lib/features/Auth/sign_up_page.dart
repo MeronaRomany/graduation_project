@@ -1,8 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 import '../../services/firestore_service.dart';
 
 class SignUpPage extends StatefulWidget {
+
+  static const routeName = 'signUpPage';
+
   const SignUpPage({super.key});
 
   @override
@@ -198,7 +202,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   );
                                   Navigator.pushNamed(
                                     context,
-                                    "homePage",
+                                    MainView.routeName,
                                   );
                                 },
                                 child: const Text("OK"),
