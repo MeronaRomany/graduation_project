@@ -19,7 +19,7 @@ class HomeViewBody extends StatelessWidget {
           height: double.infinity,
           decoration: BoxDecoration(
               image: DecorationImage(
-            image: AssetImage(Assets.resourceImagesBackground),
+            image: AssetImage(Assets.assetsImagesBackground),
             fit: BoxFit.fill,
           )),
           child: SafeArea(

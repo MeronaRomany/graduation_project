@@ -30,7 +30,7 @@ class HomeViewTitleRow extends StatelessWidget {
             minRadius: 11,
             maxRadius: 21,
             backgroundImage:
-                AssetImage(Assets.resourceImagesPersonalAvatar),
+                AssetImage(Assets.assetsImagesPersonalAvatar),
           ),
         ]),
       ),

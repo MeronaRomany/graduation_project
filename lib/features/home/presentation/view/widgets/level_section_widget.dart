@@ -44,8 +44,8 @@ class LevelSectionWidget extends StatelessWidget {
         SizedBox(height: 4,),
         LevelComponent(
           text: 'Keywords you \nmust know',
-          backgroundImage: Assets.resourceImagesHollowRightMark,
-          image: Assets.resourceImagesRightMark,
+          backgroundImage: Assets.assetsImagesHollowRightMark,
+          image: Assets.assetsImagesRightMark,
           numOfLevel: 1,
         ),
                       
@@ -53,8 +53,8 @@ class LevelSectionWidget extends StatelessWidget {
                       
         LevelComponent(
           text: 'Keywords you \nmust know',
-          backgroundImage: Assets.resourceImagesHollowPlayButton,
-          image: Assets.resourceImagesPlayButton,
+          backgroundImage: Assets.assetsImagesHollowPlayButton,
+          image: Assets.assetsImagesPlayButton,
           numOfLevel: 2,
         ),
         SizedBox(height: 22,),
@@ -71,8 +71,8 @@ class LevelSectionWidget extends StatelessWidget {
         SizedBox(height: 4,),
         LevelComponent(
           text: 'Keywords you \nmust know',
-          backgroundImage: Assets.resourceImagesHollowPlayButton,
-          image: Assets.resourceImagesPlayButton,
+          backgroundImage: Assets.assetsImagesHollowPlayButton,
+          image: Assets.assetsImagesPlayButton,
           numOfLevel: 3,
         ),
                       
@@ -80,8 +80,8 @@ class LevelSectionWidget extends StatelessWidget {
                       
         LevelComponent(
           text: 'Keywords you \nmust know',
-          backgroundImage: Assets.resourceImagesHollowPlayButton,
-          image: Assets.resourceImagesPlayButton,
+          backgroundImage: Assets.assetsImagesHollowPlayButton,
+          image: Assets.assetsImagesPlayButton,
           numOfLevel: 4,
         ),
       ],
