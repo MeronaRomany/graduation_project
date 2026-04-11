@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:graduation_app/features/Auth/forget_password.dart';
 import 'package:graduation_app/features/Auth/sign_up_page.dart';
-import 'package:graduation_app/features/home/presentation/view/home_view.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 
 import 'google_sign_in.dart';
@@ -107,7 +106,7 @@ class _SignInPageState extends State<SignInPage> {
                     suffixIcon: IconButton(
                       onPressed: () {
                         changePasswordVisible(!isNotVisible);
-                        setState(() {});
+                        setState((){});
                       },
                       icon: Icon(
                         isNotVisible ? Icons.visibility : Icons.visibility_off,
