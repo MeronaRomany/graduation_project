@@ -10,14 +10,14 @@ class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
     required this.child,
-    this.borderRadius = 35,
+    this.borderRadius = 45,
     this.gradientColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -34,7 +34,7 @@ class GlassCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withAlpha(135),
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(color: Colors.white.withAlpha(5), width: 0.5),
               gradient: gradientColor != null
