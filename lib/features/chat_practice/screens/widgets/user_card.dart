@@ -21,8 +21,7 @@ class UserCard extends StatelessWidget {
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.all(
-                      3), // This creates the white border thickness
+                  padding: const EdgeInsets.all(3),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -49,11 +48,12 @@ class UserCard extends StatelessWidget {
           ),
           ElevatedButton.icon(
             onPressed: () {},
-            icon: const Icon(Icons.mic, size: 18),
+            icon: const Icon(Icons.mic_none_outlined, size: 18),
             label: const Text("Join Call"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(221, 255, 255, 255),
+              backgroundColor: const Color.fromARGB(247, 255, 255, 255),
               foregroundColor: const Color(0xFFB5005B),
+              shadowColor: Colors.black,
               elevation: .01,
               shape: const StadiumBorder(),
             ),
