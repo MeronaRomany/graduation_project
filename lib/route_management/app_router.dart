@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:graduation_app/features/chat_practice/screens/chat_practice_audio_screen.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 import '../features/Auth/forget_password.dart';
 import '../features/Auth/sign_in_page.dart';
@@ -18,6 +19,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => HomeView());
       case MainView.routeName:
         return MaterialPageRoute(builder: (_) => MainView());
+      case ChatPracticeAudioScreen.routeName:
+        return MaterialPageRoute(builder: (_) => ChatPracticeAudioScreen(localUserId: '',));
 
     }
     return null;
