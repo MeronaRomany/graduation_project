@@ -3,7 +3,7 @@ class UserModel {
   final String name;
   final String email;
 
-  UserModel({required this.uid, required this.name, required this.email});
+  const UserModel({required this.uid, required this.name, required this.email});
 
   Map<String, dynamic> toJson() {
     return {"uid": uid,

@@ -8,6 +8,7 @@ environment:
   sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
+  agora_rtc_engine: ^6.5.3
   cloud_firestore: ^6.0.3
   collection: ^1.18.0
   cupertino_icons: ^1.0.8

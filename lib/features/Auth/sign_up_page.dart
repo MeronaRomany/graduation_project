@@ -19,7 +19,7 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController password = TextEditingController();
   TextEditingController email = TextEditingController();
   bool isNotVisible = true;
-  late UsersFireStore usersFireStore = UsersFireStore();
+  late FireStoreService usersFireStore = FireStoreService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(

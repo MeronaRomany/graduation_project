@@ -45,6 +45,8 @@
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Fluentify needs access to your microphone for live audio practice.</string>
 
     <!-- Add Google Sign-In URL Types -->
     <key>CFBundleURLTypes</key>
