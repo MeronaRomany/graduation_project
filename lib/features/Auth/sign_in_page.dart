@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:graduation_app/features/Auth/forget_password.dart';
 import 'package:graduation_app/features/Auth/sign_up_page.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
+import 'package:graduation_app/services/firestore_service.dart';
 
 import 'google_sign_in.dart';
 
@@ -152,14 +153,16 @@ class _SignInPageState extends State<SignInPage> {
                         email: email.text.trim(),
                         password: password.text.trim(),
                       )
-                          .then((data) {
-                        showDialog(
+                          .then((data) async {
+                         await showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text("Login successful"),
                             content: Text("Welcome ${data.user!.email}"),
                           ),
                         );
+
+                        await FireStoreService().createUserToFireStore(data.user!.uid, data.user!.displayName!, data.user!.email!);
 
                         Navigator.pushReplacementNamed(
                             context, MainView.routeName);
