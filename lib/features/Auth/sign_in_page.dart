@@ -4,6 +4,8 @@ import 'package:graduation_app/features/Auth/forget_password.dart';
 import 'package:graduation_app/features/Auth/sign_up_page.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 import 'package:graduation_app/services/firestore_service.dart';
+import 'package:graduation_app/services/user_storage_services.dart';
+import 'package:graduation_app/models/user_model_auth.dart';
 
 import 'google_sign_in.dart';
 
@@ -162,7 +164,24 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                         );
 
-                        await FireStoreService().createUserToFireStore(data.user!.uid, data.user!.displayName!, data.user!.email!);
+                        UserModel? userModel = await FireStoreService().getUserFromFireStore(data.user!.uid);
+                        if (userModel != null) {
+                          await UserStorageService().saveUser(
+                              uid: userModel.uid,
+                              name: userModel.name,
+                              email: userModel.email,
+                              level: userModel.level);
+                        } else {
+                          await FireStoreService().createUserToFireStore(
+                              data.user!.uid,
+                              data.user!.displayName ?? 'Guest',
+                              data.user!.email ?? '');
+                          await UserStorageService().saveUser(
+                              uid: data.user!.uid,
+                              name: data.user!.displayName ?? 'Guest',
+                              email: data.user!.email ?? '',
+                              level: 'A1');
+                        }
 
                         Navigator.pushReplacementNamed(
                             context, MainView.routeName);

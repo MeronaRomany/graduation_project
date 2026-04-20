@@ -5,9 +5,12 @@ import 'package:graduation_app/features/chat_practice/screens/chat_practice_audi
 import 'package:graduation_app/features/chat_practice/screens/cubit/chat_practice_cubit.dart';
 import 'package:graduation_app/features/chat_practice/screens/cubit/chat_practice_state.dart';
 import 'package:graduation_app/features/chat_practice/screens/widgets/glass_card.dart';
+import 'package:graduation_app/models/user_model_auth.dart';
 
 class UserCard extends StatelessWidget {
-  const UserCard({super.key});
+  final UserModel user;
+
+  const UserCard({super.key, required this.user});
   @override
   Widget build(BuildContext context) {
     return GlassCard(
@@ -38,14 +41,14 @@ class UserCard extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Marc",
+                Text(user.name.isEmpty ? "User" : user.name,
                     style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                Text("C1 Advanced", style: TextStyle(color: Colors.black54)),
+                        const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+                Text(user.level.isEmpty ? "Level" : user.level, style: const TextStyle(color: Colors.black54)),
               ],
             ),
           ),
@@ -57,7 +60,7 @@ class UserCard extends StatelessWidget {
                     ? null
                     : () async {
                         final currentCubit = context.read<ChatPracticeCubit>();
-                        await currentCubit.initChat(null);
+                        await currentCubit.initChat();
                         if (context.mounted) {
                           Navigator.push(
                             context,
