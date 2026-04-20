@@ -52,23 +52,23 @@ class ChatPracticeRepositoryImpl implements ChatPracticeRepository {
   }
 
   @override
-  Future<void> findMatch(String userId) async {
+  Future<void> findMatch() async {
     // Simple matching logic using Firestore queue
     // 1. Check if anyone is waiting
-    String? channelId = await _fireStoreService.findMatch(userId);
+    String? channelId = await _fireStoreService.findMatch();
 
     await joinChannel(channelId ?? "testgroup1");
   }
 
   @override
-  Future<void> cancelMatch(String userId) async {
-    await _fireStoreService.removeFromQueue(userId);
+  Future<void> cancelMatch() async {
+    await _fireStoreService.removeFromQueue();
     await leaveChannel();
   }
 
   @override
-  Future<void> enterWaitingRoom(String userId) async {
-    await _fireStoreService.addToQueue(userId, "testgroup1");
+  Future<void> enterWaitingRoom() async {
+    await _fireStoreService.addToQueue("testgroup1");
     await _agoraService.initializeAndUseWaitingRoom();
   }
 }

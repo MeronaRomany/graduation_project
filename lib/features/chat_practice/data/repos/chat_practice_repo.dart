@@ -4,7 +4,7 @@ abstract class ChatPracticeRepository {
   Future<void> muteLocalAudio(bool isMuted);
   Stream<int> listenToAudioLevels();
   Stream<int> listenToConnectionState();
-  Future<void> findMatch(String userId);
-  Future<void> cancelMatch(String userId);
-  Future<void> enterWaitingRoom(String userId);
+  Future<void> findMatch();
+  Future<void> cancelMatch();
+  Future<void> enterWaitingRoom();
 }

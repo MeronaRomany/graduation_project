@@ -11,6 +11,7 @@ import 'package:graduation_app/features/chat_practice/screens/widgets/header_del
 import 'package:graduation_app/features/chat_practice/screens/widgets/ice_breaker_row.dart';
 import 'package:graduation_app/features/chat_practice/screens/widgets/section_header.dart';
 import 'package:graduation_app/features/chat_practice/screens/widgets/user_card.dart';
+import 'package:graduation_app/models/user_model_auth.dart';
 
 class ChatPracticeViewBody extends StatelessWidget {
   const ChatPracticeViewBody({super.key});
@@ -78,20 +79,54 @@ class ChatPracticeViewBody extends StatelessWidget {
                          ),
                       ),
                       const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                      const SliverToBoxAdapter(
-                          child: SectionHeader(title: "Online Now", count: 24)),
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: BlocProvider(
-                              create: (context) => ChatPracticeCubit(
-                                  ChatPracticeRepositoryImpl(fireStoreService: FireStoreService())),
-                              child: const UserCard(),
+                      StreamBuilder<List<UserModel>>(
+                        stream: FireStoreService().getWaitingUsers(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                              ),
+                            );
+                          }
+                          final users = snapshot.data ?? [];
+                          return SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SectionHeader(title: "Online Now", count: users.length),
+                                if (users.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 20),
+                                    child: Center(
+                                      child: Text(
+                                        "No users waiting in queue",
+                                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: users.length,
+                                    itemBuilder: (context, index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 12.0),
+                                        child: BlocProvider(
+                                          create: (context) => ChatPracticeCubit(
+                                              ChatPracticeRepositoryImpl(fireStoreService: FireStoreService())),
+                                          child: UserCard(user: users[index]),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                              ],
                             ),
-                          ),
-                          childCount: 4,
-                        ),
+                          );
+                        },
                       ),
                       const SliverToBoxAdapter(child: SizedBox(height: 20)),
                       const SliverToBoxAdapter(

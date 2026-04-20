@@ -10,30 +10,17 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
   StreamSubscription? _audioSubscription;
   StreamSubscription? _connectionSubscription;
   Timer? _timer;
-  UserModel? localUser;
 
   ChatPracticeCubit(this._repository)
       : super(ChatPracticeState(status: CallStatus.initial));
 
-  Future<void> initChat(String? localUserId) async {
+  Future<void> initChat() async {
     if (state.status == CallStatus.loading ||
         state.status == CallStatus.connected) {
       log("initChat already in progress or connected, skipping...");
       return;
     }
     emit(state.copyWith(status: CallStatus.loading));
-
-    // Setup mock local user for display purposes
-    if (localUser == null) {
-      log("Initializing local user for the first time...");
-      localUser = UserModel(
-        uid: localUserId ?? "test_user",
-        name: 'Current User',
-        email: '',
-      );
-    } else {
-      log("Local user already exists: ${localUser!.uid}");
-    }
 
     try {
       // Cancel any existing subscriptions to avoid memory leaks or duplicate events
@@ -51,7 +38,7 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
 
             // Setup mock remote user for display
             final remoteUser = const UserModel(
-                uid: 'remote_id', name: 'Practice Partner', email: '');
+                uid: 'remote_id', name: 'Practice Partner', email: '', level: 'A1');
             emit(state.copyWith(remoteUser: remoteUser));
             break;
           case 3:
@@ -69,7 +56,7 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
 
         emit(state.copyWith(status: newStatus));
       });
-      await _repository.findMatch(localUser!.uid);
+      await _repository.findMatch();
       log("after findMatch ");
       _audioSubscription = _repository.listenToAudioLevels().listen((volume) {
         emit(state.copyWith(remoteLevelOfAudio: volume));
@@ -116,7 +103,7 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
     emit(state.copyWith(status: CallStatus.ended));
     try {
       // cancelMatch now only calls leaveChannel in the implementation
-      await _repository.cancelMatch(localUser!.uid);
+      await _repository.cancelMatch();
     } catch (e) {
       log("error in leave call  ", error: e);
       emit(state.copyWith(errMessage: 'Error leaving call: ${e.toString()}'));
@@ -140,11 +127,6 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
     }
     emit(state.copyWith(status: CallStatus.loading));
 
-    localUser ??= UserModel(
-        uid: localUserId ?? "wait_user",
-        name: 'Waiting User',
-        email: '',
-      );
 
     try {
       await _audioSubscription?.cancel();
@@ -158,7 +140,7 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
             newStatus = CallStatus.connected;
             _startTimer();
             final remoteUser = const UserModel(
-                uid: 'remote_wait_id', name: 'Waiting Room', email: '');
+                uid: 'remote_wait_id', name: 'Waiting Room', email: '', level: 'A1');
             emit(state.copyWith(remoteUser: remoteUser));
             break;
           case 3: newStatus = CallStatus.reconnecting; break;
@@ -171,7 +153,7 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
         emit(state.copyWith(status: newStatus));
       });
       
-      await _repository.enterWaitingRoom(localUser!.uid);
+      await _repository.enterWaitingRoom();
       
       _audioSubscription = _repository.listenToAudioLevels().listen((volume) {
         emit(state.copyWith(remoteLevelOfAudio: volume));
