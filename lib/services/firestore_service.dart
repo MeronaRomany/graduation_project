@@ -1,11 +1,20 @@
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:graduation_app/services/user_storage_services.dart';
 
 import '../models/user_model_auth.dart';
 class FireStoreService{
+  final UserStorageService _userStorageService = UserStorageService();
 
-  Future createUserToFireStore(String uid,String name, String email)async{
+  Future<UserModel> get userModel async =>  UserModel(
+    uid: (await _userStorageService.getUser())['uid'],
+    name: (await _userStorageService.getUser())['name'],
+    email: (await _userStorageService.getUser())['email'],
+    level: (await _userStorageService.getUser())['level'],
+  );
+
+  Future<void> createUserToFireStore(String uid,String name, String email)async{
     var setuserData= await FirebaseFirestore.instance.collection("users").doc(uid);
 
     Map<String, dynamic> json= {
@@ -33,11 +42,11 @@ class FireStoreService{
     return getUserData;
   }
 
-   Future<void> addToQueue(String userId, String channelId) async {
-    await FirebaseFirestore.instance.collection('chat_practice_queue').doc(userId).set({
-      'name': (await getUserFromFireStore(userId))?.name,
-      'email': (await getUserFromFireStore(userId))?.email,
-      'callerId': userId,
+   Future<void> addToQueue(String channelId) async {
+    await FirebaseFirestore.instance.collection('chat_practice_queue').doc(((await userModel).uid)).set({
+      'name': (await userModel).name,
+      'email': (await userModel).email,
+      'callerId': (await userModel).uid,
       'receiverId': null,
       'channelId': channelId,
       'status': 'waiting',
@@ -45,8 +54,8 @@ class FireStoreService{
     });
   }
 
-  Future<void> removeFromQueue(String userId) async {
-   await FirebaseFirestore.instance.collection('chat_practice_queue').doc(userId).delete();
+  Future<void> removeFromQueue() async {
+   await FirebaseFirestore.instance.collection('chat_practice_queue').doc(((await userModel).uid)).delete();
   }
 
   Stream<List<UserModel>> getWaitingUsers() {
@@ -61,19 +70,7 @@ class FireStoreService{
             }).toList());
   }
 
-  Future<void> joinSpecificMatch(String myUserId, String targetUserId, String channelId) async {
-    final docRef = FirebaseFirestore.instance.collection('chat_practice_queue').doc(targetUserId);
-    final doc = await docRef.get();
-    if (doc.exists && doc.data()?['status'] == 'waiting') {
-      await docRef.update({
-        'status': 'matched',
-        'receiverId': myUserId,
-        'matchedAt': FieldValue.serverTimestamp(),
-      });
-    }
-  }
-
-  Future<String?> findMatch(String userId) async {
+  Future<String?> findMatch() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('chat_practice_queue')
         .where('status', isEqualTo: 'waiting')
@@ -83,17 +80,18 @@ class FireStoreService{
     if (querySnapshot.docs.isNotEmpty) {
       log("querySnapshot.docs.isNotEmpty");
       final doc = querySnapshot.docs.first;
-      if (doc.id != userId) {
+      if (doc.id != (await userModel).uid ) {
         await doc.reference.update({
           'status': 'matched',
-          'receiverId': userId,
+          'receiverId': (await userModel).uid,
           'matchedAt': FieldValue.serverTimestamp(),
         });
+        await removeFromQueue();
         return doc.data()['channelId'];
       }
     } 
     log("before addToQueue");
-    await addToQueue(userId, "testgroup1");
+    await addToQueue( "testgroup1");
     return null;
   }
 
