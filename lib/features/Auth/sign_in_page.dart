@@ -261,9 +261,12 @@ class _SignInPageState extends State<SignInPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                      Text(
-                        'Don\'t have an account?',
-                        style: TextStyle(fontSize: 20, color: Colors.grey),
+                      Flexible(
+                        child: Text(
+                          'Don\'t have an account?',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
@@ -273,7 +276,7 @@ class _SignInPageState extends State<SignInPage> {
                           'Sign up for free',
                           style: TextStyle(
                             decoration: TextDecoration.underline,
-                            fontSize: 16,
+                            fontSize: 14,
                             color: Colors.grey,
                           ),
                         ),

@@ -5,6 +5,7 @@ import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 import '../features/Auth/forget_password.dart';
 import '../features/Auth/sign_in_page.dart';
 import '../features/Auth/sign_up_page.dart';
+import '../features/home/data/models/role_play_scenario.dart';
 import '../features/home/presentation/view/home_view.dart';
 
 class AppRouter {
@@ -25,7 +26,10 @@ class AppRouter {
       case ChatPracticeAudioScreen.routeName:
         return MaterialPageRoute(builder: (_) => ChatPracticeAudioScreen(localUserId: '',));
       case aiSpeaker:
-        return MaterialPageRoute(builder: (_) => const AIModelSpeakerScreen());
+        final scenario = setting.arguments as RolePlayScenario?;
+        return MaterialPageRoute(
+          builder: (_) => AIModelSpeakerScreen(scenario: scenario),
+        );
     }
     return null;
   }

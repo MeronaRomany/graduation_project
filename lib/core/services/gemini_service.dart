@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../ai_instructions.dart';
 import '../config/api_config.dart';
+import '../role_play_prompts.dart';
+import '../../features/home/data/models/role_play_scenario.dart';
 
 class GeminiService {
   static const String _baseUrl =
@@ -15,49 +17,101 @@ class GeminiService {
   Future<String> generateResponse({
     required String userMessage,
     required String conversationHistory,
+    RolePlayScenario? scenario,
     required String userLevel,
     String? currentTopic,
   }) async {
+    print('[GeminiService] Generating response...');
+    print('[GeminiService] User message: "${userMessage.substring(0, userMessage.length > 30 ? 30 : userMessage.length)}..."');
+    print('[GeminiService] User level: $userLevel');
+    print('[GeminiService] Scenario: ${scenario?.title ?? "None"}');
+    
     try {
-      final prompt = _buildPrompt(
-        userMessage: userMessage,
-        conversationHistory: conversationHistory,
-        userLevel: userLevel,
-        currentTopic: currentTopic,
-      );
-
-      final response = await _client.post(
-        Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt}
-              ]
-            }
-          ],
-          'generationConfig': {
-            'temperature': 0.8,
-            'topK': 40,
-            'topP': 0.95,
-            'maxOutputTokens': 1024,
-          }
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final generatedText =
-            data['candidates'][0]['content']['parts'][0]['text'];
-        return generatedText.trim();
-      } else {
-        throw Exception('Failed to generate response: ${response.statusCode}');
+      // Build prompt with error handling
+      String prompt;
+      try {
+        prompt = _buildPrompt(
+          userMessage: userMessage,
+          conversationHistory: conversationHistory,
+          userLevel: userLevel,
+          currentTopic: currentTopic,
+          scenario: scenario,
+        );
+        print('[GeminiService] Prompt built successfully');
+      } catch (e, stackTrace) {
+        print('[GeminiService ERROR] Failed to build prompt: $e');
+        print('[GeminiService ERROR] Stack trace: $stackTrace');
+        throw Exception('Failed to build prompt: $e');
       }
-    } catch (e) {
-      print('Error generating Gemini response: $e');
+
+      // Make API request with detailed error handling
+      http.Response response;
+      try {
+        print('[GeminiService] Making API request...');
+        response = await _client.post(
+          Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'contents': [
+              {
+                'parts': [
+                  {'text': prompt}
+                ]
+              }
+            ],
+            'generationConfig': {
+              'temperature': 0.8,
+              'topK': 40,
+              'topP': 0.95,
+              'maxOutputTokens': 1024,
+            }
+          }),
+        );
+        print('[GeminiService] API response received: ${response.statusCode}');
+      } catch (e, stackTrace) {
+        print('[GeminiService ERROR] API request failed: $e');
+        print('[GeminiService ERROR] Stack trace: $stackTrace');
+        throw Exception('Network error: $e');
+      }
+
+      // Parse response with error handling
+      if (response.statusCode == 200) {
+        try {
+          final data = jsonDecode(response.body);
+          
+          // Validate response structure
+          if (data['candidates'] == null || data['candidates'].isEmpty) {
+            print('[GeminiService ERROR] No candidates in response');
+            print('[GeminiService ERROR] Response body: ${response.body}');
+            throw Exception('Invalid response structure: no candidates');
+          }
+          
+          final candidate = data['candidates'][0];
+          if (candidate['content'] == null || candidate['content']['parts'] == null) {
+            print('[GeminiService ERROR] Invalid content structure');
+            print('[GeminiService ERROR] Candidate: $candidate');
+            throw Exception('Invalid response structure: missing content');
+          }
+          
+          final generatedText = candidate['content']['parts'][0]['text'];
+          print('[GeminiService] Response generated successfully');
+          return generatedText.trim();
+        } catch (e, stackTrace) {
+          print('[GeminiService ERROR] Failed to parse response: $e');
+          print('[GeminiService ERROR] Response body: ${response.body}');
+          print('[GeminiService ERROR] Stack trace: $stackTrace');
+          throw Exception('Failed to parse response: $e');
+        }
+      } else {
+        print('[GeminiService ERROR] API returned error status: ${response.statusCode}');
+        print('[GeminiService ERROR] Response body: ${response.body}');
+        throw Exception('API error ${response.statusCode}: ${response.body}');
+      }
+    } catch (e, stackTrace) {
+      print('[GeminiService ERROR] Error generating response: $e');
+      print('[GeminiService ERROR] Stack trace: $stackTrace');
       return _getFallbackResponse(userMessage);
     }
   }
@@ -67,7 +121,19 @@ class GeminiService {
     required String conversationHistory,
     required String userLevel,
     String? currentTopic,
+    RolePlayScenario? scenario,
   }) {
+    // If we have a role-play scenario, use role-play specific prompts
+    if (scenario != null) {
+      return RolePlayPrompts.buildScenarioPrompt(
+        scenario: scenario,
+        userMessage: userMessage,
+        conversationHistory: conversationHistory,
+        userLevel: userLevel,
+      );
+    }
+
+    // Otherwise, use the general tutor prompts
     final String topic = currentTopic ?? 'general conversation';
     final String goals =
         'Help user practice English through natural conversation';
@@ -123,18 +189,23 @@ AI RESPONSE:''';
   }
 
   Future<String> assessUserLevel(String sampleText) async {
+    print('[GeminiService] Assessing user level...');
+    print('[GeminiService] Sample text: "${sampleText.substring(0, sampleText.length > 30 ? 30 : sampleText.length)}..."');
+    
     try {
-      final response = await _client.post(
-        Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {
-                  'text': '''
+      http.Response response;
+      try {
+        response = await _client.post(
+          Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'contents': [
+              {
+                'parts': [
+                  {
+                    'text': '''
 Analyze this English text sample and determine the user's proficiency level. Consider vocabulary, grammar, sentence structure, and overall fluency.
 
 Text: "$sampleText"
@@ -148,33 +219,55 @@ Choose the most appropriate level based on:
 - Overall fluency indicators
 
 Level:'''
-                }
-              ]
+                  }
+                ]
+              }
+            ],
+            'generationConfig': {
+              'temperature': 0.3,
+              'maxOutputTokens': 50,
             }
-          ],
-          'generationConfig': {
-            'temperature': 0.3,
-            'maxOutputTokens': 50,
-          }
-        }),
-      );
+          }),
+        );
+      } catch (e, stackTrace) {
+        print('[GeminiService ERROR] Level assessment request failed: $e');
+        print('[GeminiService ERROR] Stack trace: $stackTrace');
+        return 'intermediate';
+      }
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final level = data['candidates'][0]['content']['parts'][0]['text']
-            .trim()
-            .toLowerCase();
+        try {
+          final data = jsonDecode(response.body);
+          
+          if (data['candidates'] == null || data['candidates'].isEmpty) {
+            print('[GeminiService ERROR] No candidates in level assessment response');
+            return 'intermediate';
+          }
+          
+          final level = data['candidates'][0]['content']['parts'][0]['text']
+              .trim()
+              .toLowerCase();
 
-        // Ensure we return a valid level
-        if (['beginner', 'elementary', 'intermediate', 'advanced']
-            .contains(level)) {
-          return level;
+          // Ensure we return a valid level
+          if (['beginner', 'elementary', 'intermediate', 'advanced']
+              .contains(level)) {
+            print('[GeminiService] Level assessed as: $level');
+            return level;
+          } else {
+            print('[GeminiService ERROR] Invalid level returned: $level');
+          }
+        } catch (e, stackTrace) {
+          print('[GeminiService ERROR] Failed to parse level response: $e');
+          print('[GeminiService ERROR] Stack trace: $stackTrace');
         }
+      } else {
+        print('[GeminiService ERROR] Level assessment API error: ${response.statusCode}');
       }
 
       return 'intermediate'; // Default fallback level
-    } catch (e) {
-      print('Error assessing user level: $e');
+    } catch (e, stackTrace) {
+      print('[GeminiService ERROR] Error assessing user level: $e');
+      print('[GeminiService ERROR] Stack trace: $stackTrace');
       return 'intermediate'; // Default fallback level
     }
   }

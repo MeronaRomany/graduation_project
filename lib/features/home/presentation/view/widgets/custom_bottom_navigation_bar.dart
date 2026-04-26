@@ -14,7 +14,7 @@ class CustomBottomNavigationBar extends StatefulWidget {
 }
 
 class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
-  List<String> titles = ['Home', 'Friends', 'Chat Practice'];
+  List<String> titles = ['Home', 'Chat Practice'];
 
   @override
   Widget build(BuildContext context) {
