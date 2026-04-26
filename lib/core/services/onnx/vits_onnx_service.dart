@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:onnxruntime/onnxruntime.dart';
+import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'onnx_service.dart';
 
 class VITSOnnxService extends OnnxService {
@@ -15,38 +15,25 @@ class VITSOnnxService extends OnnxService {
 
     // Simplified input mapping for now
     final inputIds = _textToIds(text);
-    final inputOrt = OrtValueTensor.createTensorWithDataList(
-      Int64List.fromList(inputIds),
+    final inputOrt = await OrtValue.fromList(
+      inputIds,
       [1, inputIds.length],
     );
 
     final inputs = {'input': inputOrt};
-    final runOptions = OrtRunOptions();
-    final outputs = session!.run(runOptions, inputs);
+    final outputs = await session.run(inputs);
 
-    inputOrt.release();
-    runOptions.release();
+    // Get audio output - the output name depends on the model
+    final outputTensor = outputs.values.first;
+    final audioOutput = await outputTensor.asList();
 
-    final audioOutput = outputs[0]?.value;
-    if (audioOutput == null) throw Exception('VITS output is null');
-
-    // Handle different possible output shapes from VITS ONNX
-    List<double> samples;
-    if (audioOutput is List<List<List<double>>>) {
-      samples = audioOutput[0][0];
-    } else if (audioOutput is List<List<double>>) {
-      samples = audioOutput[0];
-    } else if (audioOutput is List<double>) {
-      samples = audioOutput;
-    } else {
-      throw Exception('Unexpected VITS output shape: ${audioOutput.runtimeType}');
+    if (audioOutput == null || audioOutput.isEmpty) {
+      throw Exception('VITS output is null or empty');
     }
 
+    // Convert to Float32List
+    final samples = audioOutput.cast<double>();
     final flatAudio = Float32List.fromList(samples);
-
-    for (var element in outputs) {
-      element?.release();
-    }
 
     return flatAudio;
   }

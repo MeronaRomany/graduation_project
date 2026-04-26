@@ -28,7 +28,7 @@ dependencies:
   path_provider: ^2.1.5
   permission_handler: ^12.0.1
   shared_preferences: ^2.5.5
-  onnxruntime: ^1.4.1
+  flutter_onnxruntime: ^1.6.0
   record: ^5.1.2
   audioplayers: ^5.2.1
 
