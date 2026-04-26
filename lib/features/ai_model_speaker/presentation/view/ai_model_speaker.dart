@@ -92,6 +92,8 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             listener: (context, state) {
               if (state is ConversationError) {
                 print('[AIModelSpeakerView] Error displayed: ${state.message}');
+                // Capture bloc reference before showing SnackBar
+                final bloc = context.read<ConversationBloc>();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -105,7 +107,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                       textColor: Colors.white,
                       onPressed: () {
                         print('[AIModelSpeakerView] Retrying conversation initialization...');
-                        context.read<ConversationBloc>().add(ResetConversation());
+                        bloc.add(ResetConversation());
                       },
                     ),
                   ),

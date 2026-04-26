@@ -7,7 +7,7 @@ import '../../features/home/data/models/role_play_scenario.dart';
 
 class GeminiService {
   static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   // API key is loaded from config file
 
   final http.Client _client;

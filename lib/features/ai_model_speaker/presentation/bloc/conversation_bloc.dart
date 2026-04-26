@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/services/gemini_service.dart';
 import '../../../../core/services/speech_service.dart';
 import '../../../../core/services/tts_service.dart';
@@ -84,6 +85,8 @@ class ReportError extends ConversationEvent {
   @override
   List<Object?> get props => [error];
 }
+
+class OpenAppSettings extends ConversationEvent {}
 
 // States
 abstract class ConversationState extends Equatable {
@@ -206,6 +209,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     on<ResetConversation>(_onResetConversation);
     on<UpdateUserLevel>(_onUpdateUserLevel);
     on<ReportError>(_onReportError);
+    on<OpenAppSettings>(_onOpenAppSettings);
 
     // Listen to speech service streams
     _speechService.state.listen(
@@ -239,6 +243,17 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       },
       onError: (error) {
         print('[RolePlay ERROR] Speech error stream error: $error');
+      },
+    );
+
+    // Listen for open settings requests (e.g., when permission permanently denied)
+    _speechService.openSettings.listen(
+      (_) {
+        print('[RolePlay] Opening app settings for microphone permission');
+        add(OpenAppSettings());
+      },
+      onError: (error) {
+        print('[RolePlay ERROR] Open settings stream error: $error');
       },
     );
 
@@ -613,6 +628,14 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   ) async {
     print('[RolePlay ERROR] Reported error: ${event.error}');
     emit(ConversationError(event.error));
+  }
+
+  Future<void> _onOpenAppSettings(
+    OpenAppSettings event,
+    Emitter<ConversationState> emit,
+  ) async {
+    print('[RolePlay] Opening device app settings');
+    await openAppSettings();
   }
 
   @override

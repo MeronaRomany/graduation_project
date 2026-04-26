@@ -28,28 +28,27 @@ class SpeechService {
       StreamController<String>.broadcast();
   final StreamController<String> _errorController =
       StreamController<String>.broadcast();
+  final StreamController<bool> _openSettingsController =
+      StreamController<bool>.broadcast();
 
   Stream<SpeechState> get state => _stateController.stream;
   Stream<String> get result => _resultController.stream;
   Stream<String> get error => _errorController.stream;
+  Stream<bool> get openSettings => _openSettingsController.stream;
 
   Future<bool> initialize() async {
     try {
       _stateController.add(SpeechState.initializing);
-      
-      final permission = await Permission.microphone.request();
-      if (permission != PermissionStatus.granted) {
-        _errorController.add('Microphone permission required');
-        return false;
-      }
 
+      // Initialize Whisper ONNX - fail if model is missing
       await _whisperOnnxService.init();
+
       _isInitialized = true;
       _stateController.add(SpeechState.idle);
       return true;
     } catch (e) {
       _errorController.add('Init failed: $e');
-      return false;
+      throw Exception('Whisper ONNX model failed to load. Ensure assets/models/stt_whisper_quant.onnx exists. Error: $e');
     }
   }
 
@@ -57,9 +56,28 @@ class SpeechService {
     if (!_isInitialized || _isListening) return;
 
     try {
+      // Check if we have permission using the record package
+      bool hasPermission = await _recorder.hasPermission();
+      
+      if (!hasPermission) {
+        // Try requesting through permission_handler as fallback
+        final permissionStatus = await Permission.microphone.request();
+        hasPermission = permissionStatus.isGranted;
+        
+        if (!hasPermission) {
+          if (permissionStatus.isPermanentlyDenied) {
+            _errorController.add('Microphone permission denied. Please enable it in Settings.');
+            _openSettingsController.add(true);
+          } else {
+            _errorController.add('Microphone permission required');
+          }
+          return;
+        }
+      }
+
       final tempDir = await getTemporaryDirectory();
       final path = '${tempDir.path}/audio.wav';
-      
+
       const config = RecordConfig(
         encoder: AudioEncoder.wav,
         sampleRate: 16000,
@@ -83,8 +101,8 @@ class SpeechService {
       _stateController.add(SpeechState.processing);
 
       if (path != null) {
+        // Use Whisper ONNX - fail if not available
         final bytes = await File(path).readAsBytes();
-        // Convert WAV bytes to Float32List (skipping header)
         final samples = _processWavBytes(bytes);
         final text = await _whisperOnnxService.transcribe(samples);
         _resultController.add(text);
@@ -112,5 +130,6 @@ class SpeechService {
     _stateController.close();
     _resultController.close();
     _errorController.close();
+    _openSettingsController.close();
   }
 }

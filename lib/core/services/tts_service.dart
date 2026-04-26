@@ -34,21 +34,24 @@ class TTSService {
   Future<bool> initialize() async {
     try {
       _stateController.add(TTSState.initializing);
+
+      // Initialize ONNX VITS - fail if model is missing
       await _vitsOnnxService.init();
+
       _isInitialized = true;
       _stateController.add(TTSState.idle);
-      
+
       _player.onPlayerStateChanged.listen((state) {
         if (state == PlayerState.completed) {
           _isSpeaking = false;
           _stateController.add(TTSState.idle);
         }
       });
-      
+
       return true;
     } catch (e) {
       _errorController.add('TTS Init failed: $e');
-      return false;
+      throw Exception('VITS ONNX model failed to load. Ensure assets/models/tts_vits_quant.onnx exists. Error: $e');
     }
   }
 
@@ -59,18 +62,20 @@ class TTSService {
       _isSpeaking = true;
       _stateController.add(TTSState.speaking);
 
+      // Use ONNX VITS
       final samples = await _vitsOnnxService.generateSpeech(text);
       final wavBytes = _createWavHeader(samples);
-      
+
       final tempDir = await getTemporaryDirectory();
       final file = File('${tempDir.path}/tts_output.wav');
       await file.writeAsBytes(wavBytes);
-      
+
       await _player.play(DeviceFileSource(file.path));
     } catch (e) {
       _errorController.add('Speak failed: $e');
       _isSpeaking = false;
       _stateController.add(TTSState.error);
+      throw Exception('TTS failed: $e');
     }
   }
 
