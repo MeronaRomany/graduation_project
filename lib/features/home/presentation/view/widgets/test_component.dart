@@ -3,14 +3,17 @@ import 'package:graduation_app/core/utils/app_colors.dart';
 import 'package:graduation_app/core/utils/app_text_styles.dart';
 
 class TestComponent extends StatelessWidget {
-  const TestComponent({super.key, this.isCompleted = true, required this.text});
+  const TestComponent({super.key, this.isCompleted = true, required this.text, this.onTap});
   final bool isCompleted ;
   final String text;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
         Container(
           decoration: BoxDecoration(
             border: BoxBorder.all(width: 1, color: AppColors.primaryColor),
@@ -46,6 +49,7 @@ class TestComponent extends StatelessWidget {
           ),
         )
       ],
+    ),
     );
   }
 }
