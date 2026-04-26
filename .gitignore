@@ -46,3 +46,6 @@ app.*.map.json
 
 # Secrets
 lib/core/utils/secrets.dart
+
+# AI Models
+assets/models/

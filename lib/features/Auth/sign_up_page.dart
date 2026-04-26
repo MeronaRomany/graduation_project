@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 import '../../services/firestore_service.dart';
+import '../../services/user_storage_services.dart';
 
 class SignUpPage extends StatefulWidget {
 
@@ -260,6 +261,28 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 Spacer(),
+
+                // Dev bypass button
+                TextButton(
+                  onPressed: () async {
+                    await UserStorageService().saveUser(
+                      uid: 'dev-demo-user',
+                      name: 'Dev Demo User',
+                      email: 'dev@demo.com',
+                      level: 'A1',
+                    );
+                    Navigator.pushReplacementNamed(context, MainView.routeName);
+                  },
+                  child: Text(
+                    'Dev: Bypass Login',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(

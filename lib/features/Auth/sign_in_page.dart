@@ -236,6 +236,27 @@ class _SignInPageState extends State<SignInPage> {
                       color: Colors.deepPurple,
                     )),
 
+                // Dev bypass button
+                TextButton(
+                  onPressed: () async {
+                    await UserStorageService().saveUser(
+                      uid: 'dev-demo-user',
+                      name: 'Dev Demo User',
+                      email: 'dev@demo.com',
+                      level: 'A1',
+                    );
+                    Navigator.pushReplacementNamed(context, MainView.routeName);
+                  },
+                  child: Text(
+                    'Dev: Bypass Login',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
