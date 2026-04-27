@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graduation_app/core/helper_widgets/responsive_text.dart';
 import 'package:graduation_app/core/utils/assets.dart';
+import 'package:graduation_app/features/profile/presentation/view/profile_view.dart';
 
 class HomeViewTitleRow extends StatelessWidget {
   const HomeViewTitleRow({
@@ -26,11 +27,16 @@ class HomeViewTitleRow extends StatelessWidget {
             ),
           ),
           Spacer(),
-          CircleAvatar(
-            minRadius: 11,
-            maxRadius: 21,
-            backgroundImage:
-                AssetImage(Assets.assetsImagesPersonalAvatar),
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, ProfileView.routeName);
+            },
+            child: CircleAvatar(
+              minRadius: 11,
+              maxRadius: 21,
+              backgroundImage:
+                  AssetImage(Assets.assetsImagesPersonalAvatar),
+            ),
           ),
         ]),
       ),

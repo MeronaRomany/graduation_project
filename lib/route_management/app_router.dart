@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:graduation_app/features/ai_model_speaker/presentation/view/ai_model_speaker.dart';
 import 'package:graduation_app/features/chat_practice/screens/chat_practice_audio_screen.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
+import 'package:graduation_app/features/profile/presentation/view/profile_view.dart';
 import '../features/Auth/forget_password.dart';
 import '../features/Auth/sign_in_page.dart';
 import '../features/Auth/sign_up_page.dart';
@@ -30,6 +31,8 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => AIModelSpeakerScreen(scenario: scenario),
         );
+      case ProfileView.routeName:
+        return MaterialPageRoute(builder: (_) => const ProfileView());
     }
     return null;
   }
