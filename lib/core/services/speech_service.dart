@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:whisper_ggml/whisper_ggml.dart';
+import 'onnx/whisper_onnx_service.dart';
 
 enum SpeechState {
   idle,
@@ -14,12 +16,9 @@ enum SpeechState {
 }
 
 class SpeechService {
-  static const Duration _silenceTimeout = Duration(seconds: 3);
-  static const Duration _maxRecordingDuration = Duration(minutes: 2);
-
-  WhisperController? _whisperController;
-  Timer? _silenceTimer;
-  Timer? _maxDurationTimer;
+  final AudioRecorder _recorder = AudioRecorder();
+  final WhisperOnnxService _whisperOnnxService = WhisperOnnxService();
+  
   bool _isListening = false;
   bool _isInitialized = false;
 
@@ -29,76 +28,67 @@ class SpeechService {
       StreamController<String>.broadcast();
   final StreamController<String> _errorController =
       StreamController<String>.broadcast();
+  final StreamController<bool> _openSettingsController =
+      StreamController<bool>.broadcast();
 
   Stream<SpeechState> get state => _stateController.stream;
   Stream<String> get result => _resultController.stream;
   Stream<String> get error => _errorController.stream;
-
-  bool get isListening => _isListening;
-  bool get isInitialized => _isInitialized;
+  Stream<bool> get openSettings => _openSettingsController.stream;
 
   Future<bool> initialize() async {
     try {
       _stateController.add(SpeechState.initializing);
 
-      // Request microphone permission
-      final permission = await Permission.microphone.request();
-      if (permission != PermissionStatus.granted) {
-        _errorController
-            .add('Microphone permission is required for speech recognition');
-        _stateController.add(SpeechState.error);
-        return false;
-      }
-
-      // Initialize Whisper
-      _whisperController = WhisperController();
-      await _whisperController!.initModel(
-          WhisperModel.tiny); // Using tiny model for better performance
+      // Initialize Whisper ONNX - fail if model is missing
+      await _whisperOnnxService.init();
 
       _isInitialized = true;
       _stateController.add(SpeechState.idle);
-
-      print('Speech service initialized successfully');
       return true;
     } catch (e) {
-      print('Error initializing speech service: $e');
-      _errorController.add('Failed to initialize speech recognition: $e');
-      _stateController.add(SpeechState.error);
-      return false;
+      _errorController.add('Init failed: $e');
+      throw Exception('Whisper ONNX model failed to load. Ensure assets/models/stt_whisper_quant.onnx exists. Error: $e');
     }
   }
 
   Future<void> startListening() async {
-    if (!_isInitialized || _isListening) {
-      return;
-    }
+    if (!_isInitialized || _isListening) return;
 
     try {
+      // Check if we have permission using the record package
+      bool hasPermission = await _recorder.hasPermission();
+      
+      if (!hasPermission) {
+        // Try requesting through permission_handler as fallback
+        final permissionStatus = await Permission.microphone.request();
+        hasPermission = permissionStatus.isGranted;
+        
+        if (!hasPermission) {
+          if (permissionStatus.isPermanentlyDenied) {
+            _errorController.add('Microphone permission denied. Please enable it in Settings.');
+            _openSettingsController.add(true);
+          } else {
+            _errorController.add('Microphone permission required');
+          }
+          return;
+        }
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final path = '${tempDir.path}/audio.wav';
+
+      const config = RecordConfig(
+        encoder: AudioEncoder.wav,
+        sampleRate: 16000,
+        numChannels: 1,
+      );
+
+      await _recorder.start(config, path: path);
       _isListening = true;
       _stateController.add(SpeechState.listening);
-
-      // Create temporary file for audio
-      final tempDir = await getTemporaryDirectory();
-      final audioPath =
-          '${tempDir.path}/speech_${DateTime.now().millisecondsSinceEpoch}.wav';
-
-      // Start recording (using flutter_sound for better control)
-      await _startRecording(audioPath);
-
-      // Start silence detection
-      _startSilenceDetection();
-
-      // Start max duration timer
-      _maxDurationTimer = Timer(_maxRecordingDuration, () {
-        stopListening();
-      });
-
-      print('Started listening for speech');
     } catch (e) {
-      print('Error starting speech recognition: $e');
-      _errorController.add('Failed to start listening: $e');
-      _stateController.add(SpeechState.error);
-      _isListening = false;
+      _errorController.add('Start failed: $e');
     }
   }
 
@@ -106,140 +96,40 @@ class SpeechService {
     if (!_isListening) return;
 
     try {
+      final path = await _recorder.stop();
       _isListening = false;
-
-      // Cancel timers
-      _silenceTimer?.cancel();
-      _maxDurationTimer?.cancel();
-
       _stateController.add(SpeechState.processing);
 
-      // Stop recording and get the audio file
-      final audioPath = await _stopRecording();
-
-      if (audioPath != null && await File(audioPath).exists()) {
-        // Process the audio file with Whisper
-        await _processAudioFile(audioPath);
-      } else {
-        _errorController.add('No audio recorded');
-        _stateController.add(SpeechState.error);
+      if (path != null) {
+        // Use Whisper ONNX - fail if not available
+        final bytes = await File(path).readAsBytes();
+        final samples = _processWavBytes(bytes);
+        final text = await _whisperOnnxService.transcribe(samples);
+        _resultController.add(text);
+        _stateController.add(SpeechState.completed);
       }
     } catch (e) {
-      print('Error stopping speech recognition: $e');
-      _errorController.add('Failed to stop listening: $e');
-      _stateController.add(SpeechState.error);
+      _errorController.add('Stop failed: $e');
     }
   }
 
-  Future<void> _processAudioFile(String audioPath) async {
-    try {
-      print('Processing audio file: $audioPath');
-
-      final result = await _whisperController?.transcribe(
-        model: WhisperModel.tiny,
-        audioPath: audioPath,
-        lang: 'en', // English language
-      );
-
-      // Clean up audio file
-      try {
-        await File(audioPath).delete();
-      } catch (e) {
-        print('Warning: Could not delete temporary audio file: $e');
-      }
-
-      final transcription = result?.transcription;
-      final text = transcription?.text;
-
-      if (text != null && text.isNotEmpty) {
-        final trimmedText = text.trim();
-        print('Speech recognition result: "$trimmedText"');
-
-        // Filter out very short or nonsensical results
-        if (trimmedText.length > 2 && !_isNoise(trimmedText)) {
-          _resultController.add(trimmedText);
-          _stateController.add(SpeechState.completed);
-        } else {
-          _errorController.add('Speech not clear enough to recognize');
-          _stateController.add(SpeechState.error);
-        }
-      } else {
-        _errorController.add('No speech detected');
-        _stateController.add(SpeechState.error);
-      }
-    } catch (e) {
-      print('Error processing audio: $e');
-      _errorController.add('Failed to process speech: $e');
-      _stateController.add(SpeechState.error);
+  Float32List _processWavBytes(Uint8List bytes) {
+    // Very basic WAV to PCM float conversion (skipping 44 bytes header)
+    final pcmData = bytes.sublist(44);
+    final int16List = pcmData.buffer.asInt16List();
+    final float32List = Float32List(int16List.length);
+    for (var i = 0; i < int16List.length; i++) {
+      float32List[i] = int16List[i] / 32768.0;
     }
-  }
-
-  void _startSilenceDetection() {
-    // For now, we'll use a simple timeout-based approach
-    // In a real implementation, you might want to use audio level detection
-    _silenceTimer = Timer(_silenceTimeout, () {
-      if (_isListening) {
-        print('Silence detected, stopping listening');
-        stopListening();
-      }
-    });
-  }
-
-  bool _isNoise(String text) {
-    // Filter out common noise patterns
-    final noisePatterns = [
-      'thank you',
-      'thanks for watching',
-      'you',
-      'the',
-      'a',
-      'an',
-      'is',
-      'are',
-      'was',
-      'were',
-      'be',
-      'been',
-      'being',
-      'have',
-      'has',
-      'had',
-      'do',
-      'does',
-      'did',
-      'will',
-      'would',
-      'could',
-      'should',
-      'may',
-      'might',
-      'must',
-      'can',
-    ];
-
-    final lowerText = text.toLowerCase().trim();
-    return noisePatterns.contains(lowerText) || lowerText.length < 3;
-  }
-
-  // Placeholder methods for audio recording - you might want to use flutter_sound
-  Future<void> _startRecording(String path) async {
-    // Implementation would use flutter_sound or similar for recording
-    // For now, this is a placeholder
-    print('Starting recording to: $path');
-  }
-
-  Future<String?> _stopRecording() async {
-    // Implementation would stop flutter_sound recording and return the file path
-    // For now, this is a placeholder
-    print('Stopping recording');
-    return null;
+    return float32List;
   }
 
   void dispose() {
-    _silenceTimer?.cancel();
-    _maxDurationTimer?.cancel();
+    _recorder.dispose();
+    _whisperOnnxService.dispose();
     _stateController.close();
     _resultController.close();
     _errorController.close();
+    _openSettingsController.close();
   }
 }
