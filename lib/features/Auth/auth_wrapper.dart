@@ -5,6 +5,8 @@ import 'package:graduation_app/features/Auth/sign_in_page.dart';
 import '../home/presentation/view/home_page.dart';
 
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
