@@ -30,6 +30,7 @@ class ForgetPasswordPage extends StatelessWidget {
               alignment: Alignment.topCenter,
               clipBehavior: Clip.none, // لضمان ظهور النص المرفوع فوق الحدود
               children: [
+
                 /// البوردر المرسوم مع الفتحة العلوية
                 CustomPaint(
                   painter: LoginBorderPainter(),
@@ -40,6 +41,8 @@ class ForgetPasswordPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(50),
                       borderRadius: BorderRadius.circular(20),
+
+               
                     ),
                     child: Form(
                       key: formkey,
