@@ -3,10 +3,7 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:graduation_app/features/Auth/auth_wrapper.dart';
 import 'package:graduation_app/features/Auth/sign_in_page.dart';
-import 'package:graduation_app/features/Auth/sign_up_page.dart';
-import 'package:graduation_app/features/home/presentation/view/home_page.dart';
 import 'package:graduation_app/route_management/app_router.dart';
 
 import '../core/theme/app_theme.dart';
