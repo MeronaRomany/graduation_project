@@ -70,6 +70,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '796522565005',
     projectId: 'graduationproject-fc610',
     storageBucket: 'graduationproject-fc610.firebasestorage.app',
+    androidClientId: '796522565005-95dfvnparsecnqc6bjso7t51sb175uvs.apps.googleusercontent.com',
+    iosClientId: '796522565005-srvba44t4p4s8gq3maqi9qhcq13n96d7.apps.googleusercontent.com',
     iosBundleId: 'com.buildagon.fluentify',
   );
+
 }

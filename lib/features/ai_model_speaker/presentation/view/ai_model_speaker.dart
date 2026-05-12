@@ -4,9 +4,12 @@ import '../bloc/conversation_bloc.dart';
 import '../../../../core/services/gemini_service.dart';
 import '../../../../core/services/speech_service.dart';
 import '../../../../core/services/tts_service.dart';
+import '../../../../features/home/data/models/role_play_scenario.dart';
 
 class AIModelSpeakerScreen extends StatelessWidget {
-  const AIModelSpeakerScreen({super.key});
+  final RolePlayScenario? scenario;
+
+  const AIModelSpeakerScreen({super.key, this.scenario});
 
   @override
   Widget build(BuildContext context) {
@@ -15,14 +18,17 @@ class AIModelSpeakerScreen extends StatelessWidget {
         GeminiService(),
         SpeechService(),
         TTSService(),
+        scenario: scenario,
       )..add(InitializeConversation()),
-      child: const AIModelSpeakerView(),
+      child: AIModelSpeakerView(scenario: scenario),
     );
   }
 }
 
 class AIModelSpeakerView extends StatefulWidget {
-  const AIModelSpeakerView({super.key});
+  final RolePlayScenario? scenario;
+
+  const AIModelSpeakerView({super.key, this.scenario});
 
   @override
   State<AIModelSpeakerView> createState() => _AIModelSpeakerViewState();
@@ -85,8 +91,26 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
           child: BlocConsumer<ConversationBloc, ConversationState>(
             listener: (context, state) {
               if (state is ConversationError) {
+                print('[AIModelSpeakerView] Error displayed: ${state.message}');
+                // Capture bloc reference before showing SnackBar
+                final bloc = context.read<ConversationBloc>();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message)),
+                  SnackBar(
+                    content: Text(
+                      'Error: ${state.message}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red.shade700,
+                    duration: const Duration(seconds: 5),
+                    action: SnackBarAction(
+                      label: 'RETRY',
+                      textColor: Colors.white,
+                      onPressed: () {
+                        print('[AIModelSpeakerView] Retrying conversation initialization...');
+                        bloc.add(ResetConversation());
+                      },
+                    ),
+                  ),
                 );
               }
             },
@@ -128,6 +152,10 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   }
 
   Widget _buildHeader() {
+    final scenario = widget.scenario;
+    final title = scenario?.title ?? 'Speak with AI';
+    final subtitle = scenario != null ? 'Role-Play Mode' : '';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -136,15 +164,29 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.arrow_back, color: Colors.black54),
           ),
-          const Expanded(
-            child: Text(
-              'Speak with AI',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scenario?.categoryColor ?? Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+              ],
             ),
           ),
           IconButton(
@@ -159,6 +201,13 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   }
 
   Widget _buildProfileSection() {
+    final scenario = widget.scenario;
+    final gradientColors = scenario != null
+        ? [scenario.categoryColor.withOpacity(0.8), scenario.categoryColor]
+        : const [Color(0xFF667eea), Color(0xFF764ba2)];
+    final emoji = scenario?.emoji ?? '👤';
+    final roleName = _getRoleName(scenario);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -169,23 +218,24 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              gradient: LinearGradient(
+                colors: gradientColors,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: (scenario?.categoryColor ?? Colors.purple).withOpacity(0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.person,
-              size: 60,
-              color: Colors.white,
+            child: Center(
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 60),
+              ),
             ),
           ),
 
@@ -225,7 +275,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        state.isAISpeaking ? 'Speaking...' : 'AI Tutor',
+                        state.isAISpeaking ? 'Speaking...' : roleName,
                         style: TextStyle(
                           color: state.isAISpeaking
                               ? const Color(0xFF4CAF50)
@@ -245,7 +295,43 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
     );
   }
 
+  String _getRoleName(RolePlayScenario? scenario) {
+    if (scenario == null) return 'AI Tutor';
+    switch (scenario.id) {
+      case 'restaurant':
+        return 'Waiter/Waitress';
+      case 'shopping':
+        return 'Shop Assistant';
+      case 'job_interview':
+        return 'HR Manager';
+      case 'hotel':
+        return 'Receptionist';
+      case 'airport':
+        return 'Check-in Agent';
+      case 'doctor':
+        return 'Doctor';
+      case 'making_friends':
+        return 'Friendly Local';
+      case 'coffee_shop':
+        return 'Barista';
+      case 'directions':
+        return 'Local Guide';
+      case 'business_meeting':
+        return 'Colleague';
+      case 'bank':
+        return 'Bank Representative';
+      case 'grocery':
+        return 'Store Employee';
+      default:
+        return 'AI Tutor';
+    }
+  }
+
   Widget _buildConversationArea(ConversationState state) {
+    if (state is ConversationError) {
+      return _buildErrorWidget(state.message);
+    }
+    
     if (state is ConversationReady) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -271,6 +357,60 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
       );
     }
     return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget _buildErrorWidget(String errorMessage) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.red.shade400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Something went wrong',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.red.shade800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessage,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.red.shade700,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              print('[AIModelSpeakerView] Retry button pressed');
+              context.read<ConversationBloc>().add(ResetConversation());
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try Again'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade400,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildMessageBubble(
@@ -365,6 +505,11 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   }
 
   Widget _buildControlPanel(BuildContext context, ConversationState state) {
+    // Don't show controls if there's an error
+    if (state is ConversationError) {
+      return const SizedBox.shrink();
+    }
+    
     if (state is ConversationReady) {
       return Container(
         margin: const EdgeInsets.all(20),
