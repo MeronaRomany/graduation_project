@@ -19,9 +19,24 @@ class $AssetsTranslationsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  final AssetGenImage marc = const AssetGenImage('assets/images/Marc.png');
+  final AssetGenImage aiLightedBall =
+      const AssetGenImage('assets/images/ai_lighted_ball.png');
   final AssetGenImage background =
       const AssetGenImage('assets/images/background.png');
+  final AssetGenImage hollowPlayButton =
+      const AssetGenImage('assets/images/hollow_play_button.png');
+  final AssetGenImage hollowRightMark =
+      const AssetGenImage('assets/images/hollow_right_mark.png');
+  final AssetGenImage personalAvatar =
+      const AssetGenImage('assets/images/personal_avatar.png');
+  final AssetGenImage playButton =
+      const AssetGenImage('assets/images/play_button.png');
+  final AssetGenImage rightMark =
+      const AssetGenImage('assets/images/right_mark.png');
   final AssetGenImage search = const AssetGenImage('assets/images/search.png');
+  final AssetGenImage yellowTraingle =
+      const AssetGenImage('assets/images/yellow_traingle.png');
 }
 
 class AssetGenImage {

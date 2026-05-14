@@ -203,7 +203,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   Widget _buildProfileSection() {
     final scenario = widget.scenario;
     final gradientColors = scenario != null
-        ? [scenario.categoryColor.withOpacity(0.8), scenario.categoryColor]
+        ? [scenario.categoryColor.withAlpha(0.8 as int), scenario.categoryColor]
         : const [Color(0xFF667eea), Color(0xFF764ba2)];
     final emoji = scenario?.emoji ?? '👤';
     final roleName = _getRoleName(scenario);
@@ -225,7 +225,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (scenario?.categoryColor ?? Colors.purple).withOpacity(0.3),
+                  color: (scenario?.categoryColor ?? Colors.purple).withAlpha(0.3 as int),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -250,13 +250,13 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: state.isAISpeaking
-                        ? const Color(0xFF4CAF50).withOpacity(0.1)
-                        : Colors.white.withOpacity(0.7),
+                        ? const Color(0xFF4CAF50).withAlpha(0.1 as int)
+                        : Colors.white.withAlpha(0.7 as int),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: state.isAISpeaking
                           ? const Color(0xFF4CAF50)
-                          : Colors.grey.withOpacity(0.3),
+                          : Colors.grey.withAlpha(0.3 as int),
                     ),
                   ),
                   child: Row(

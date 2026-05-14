@@ -1,10 +1,13 @@
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-// تأكد من صحة مسار ملف الـ Firestore في مشروعك
+import 'package:graduation_app/features/Auth/sign_in_page.dart';
 import '../../services/firestore_service.dart';
+import '../home/presentation/view/main_view.dart';
 
 class SignUpPage extends StatefulWidget {
+  static const String routeName = 'signUp';
+
   const SignUpPage({super.key});
 
   @override
@@ -18,7 +21,7 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController email = TextEditingController();
 
   bool isNotVisible = true;
-  late UsersFireStore usersFireStore = UsersFireStore();
+ late FireStoreService usersFireStore = FireStoreService();
 
   @override
   Widget build(BuildContext context) {
@@ -90,12 +93,14 @@ class _SignUpPageState extends State<SignUpPage> {
                             TextFormField(
                               controller: email,
                               validator: (value) {
-                                if (value == null || value.isEmpty)
+                                if (value == null || value.isEmpty) {
                                   return "Please, enter your email";
+                                }
                                 String pattern =
                                     r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
-                                if (!RegExp(pattern).hasMatch(value))
+                                if (!RegExp(pattern).hasMatch(value)) {
                                   return "Please, enter a valid email";
+                                }
                                 return null;
                               },
                               decoration: buildInputDecoration('Email'),
@@ -105,10 +110,12 @@ class _SignUpPageState extends State<SignUpPage> {
                               controller: password,
                               obscureText: isNotVisible,
                               validator: (value) {
-                                if (value == null || value.isEmpty)
+                                if (value == null || value.isEmpty) {
                                   return "please, Enter your password";
-                                if (value.length < 6)
+                                }
+                                if (value.length < 6) {
                                   return "password at least 6 char";
+                                }
                                 return null;
                               },
                               decoration:
@@ -179,7 +186,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                         color: Color(0xff666666))),
                                 TextButton(
                                   onPressed: () =>
-                                      Navigator.pushNamed(context, "signIn"),
+                                      Navigator.pushNamed(context, SignInPage.routeName),
                                   child: const Text('Sign in',
                                       style: TextStyle(
                                           decoration: TextDecoration.underline,
@@ -248,10 +255,11 @@ class _SignUpPageState extends State<SignUpPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              if (isSuccess)
-                Navigator.pushReplacementNamed(context, "homePage");
+              if (isSuccess) {
+                Navigator.pushReplacementNamed(context, MainView.routeName);
+              }
             },
-            child: const Text("OK"),
+            child: const Text("OK",style: TextStyle(color: Colors.black),),
           ),
         ],
       ),

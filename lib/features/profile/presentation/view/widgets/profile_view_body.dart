@@ -1,10 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:graduation_app/core/helper_widgets/responsive_text.dart';
 import 'package:graduation_app/core/utils/assets.dart';
+import 'package:shimmer/shimmer.dart';
+
+import '../../../../../services/firestore_service.dart';
 
 class ProfileViewBody extends StatelessWidget {
-  const ProfileViewBody({super.key});
-
+   ProfileViewBody({super.key});
+  FireStoreService userStore=FireStoreService();
+  final currentUser = FirebaseAuth.instance.currentUser!;
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -29,28 +34,65 @@ class ProfileViewBody extends StatelessWidget {
               backgroundImage: AssetImage(Assets.assetsImagesPersonalAvatar),
             ),
             const SizedBox(height: 24),
+
             // User Name
-            ResponsiveText(
-              child: Text(
-                'Afraym Herz',
-                style: TextStyle(
-                  fontFamily: Assets.resourceFontsPatrickHandSCRegular,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Email
-            Text(
-              'afraym.herz@example.com',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 40),
+            FutureBuilder(
+                future: userStore.getUserFromFireStore(currentUser.uid),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data == null) {
+                    return Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Column(
+                        spacing: 5,
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 20,
+                            color: Colors.white,
+                          ),
+                          Container(
+                            width: 140,
+                            height: 20,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  var user = snapshot.data!;
+                  return Column(
+                    children: [
+                      Text(
+                        user.name,
+                        style: TextStyle(
+                          fontFamily: Assets
+                              .resourceFontsPatrickHandSCRegular,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Email
+                      Text(
+                        user.email,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  );
+
+                }),
+
             // Profile Options
             _buildProfileOption(
               icon: Icons.person_outline,
@@ -77,7 +119,9 @@ class ProfileViewBody extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: ()async {
+                  await FirebaseAuth.instance.signOut();
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red[50],
                   foregroundColor: Colors.red,

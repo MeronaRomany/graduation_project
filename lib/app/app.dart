@@ -1,13 +1,16 @@
 import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_app/features/Auth/sign_in_page.dart';
+import 'package:graduation_app/features/home/presentation/view/home_view.dart';
 import 'package:graduation_app/route_management/app_router.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/theme/theme_cubit.dart';
+import '../features/Auth/auth_wrapper.dart';
 
 class GraduationApp extends StatelessWidget {
 
@@ -41,7 +44,8 @@ class GraduationApp extends StatelessWidget {
             locale: context.locale,
             
             onGenerateRoute:AppRouter.generateRoute,
-            home:SignInPage(),
+
+            home : AuthWrapper(),
           ),
         );
       },

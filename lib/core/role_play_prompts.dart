@@ -73,7 +73,7 @@ $conversationHistory
 
 USER MESSAGE: "$userMessage"
 
-Respond as ${scenario.title == 'Job Interview' ? 'the interviewer' : scenario.title == 'Business Meeting' ? 'a colleague' : scenario.title == 'Making Friends' ? 'a friendly person' : 'the ' + scenario.title.toLowerCase().replaceAll('at a ', '').replaceAll('ordering ', '').replaceAll("'s ", ' ')}. Stay in character, gently correct any mistakes after they finish speaking, and keep the conversation natural and engaging.
+Respond as ${scenario.title == 'Job Interview' ? 'the interviewer' : scenario.title == 'Business Meeting' ? 'a colleague' : scenario.title == 'Making Friends' ? 'a friendly person' : 'the ${scenario.title.toLowerCase().replaceAll('at a ', '').replaceAll('ordering ', '').replaceAll("'s ", ' ')}'}. Stay in character, gently correct any mistakes after they finish speaking, and keep the conversation natural and engaging.
 ''';  }
 
   static String _getLevelInstructions(String level) {
