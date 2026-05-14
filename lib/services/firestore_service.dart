@@ -15,7 +15,7 @@ class FireStoreService{
   );
 
   Future<void> createUserToFireStore(String uid,String name, String email)async{
-    var setuserData= await FirebaseFirestore.instance.collection("users").doc(uid);
+    var setuserData= FirebaseFirestore.instance.collection("users").doc(uid);
 
     Map<String, dynamic> json= {
       "uid": uid,

@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:math' as math;
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:graduation_app/core/utils/secrets.dart';
+
+import '../core/utils/secrets.dart';
 class AgoraService {
   // ✅ Singleton
   static final AgoraService _instance = AgoraService._internal();

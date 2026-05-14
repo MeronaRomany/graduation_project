@@ -6,6 +6,7 @@ class ForgetPasswordPage extends StatelessWidget {
    ForgetPasswordPage({super.key});
   final formkey = GlobalKey<FormState>();
   TextEditingController email = TextEditingController();
+   static const String routeName = '/ForgetPassword';
 
   @override
   Widget build(BuildContext context) {
