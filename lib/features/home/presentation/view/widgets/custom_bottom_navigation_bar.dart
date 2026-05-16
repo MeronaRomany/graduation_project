@@ -10,7 +10,7 @@ class CustomBottomNavigationBar extends StatefulWidget {
   final Function(int)? onItemTapped;
   final int index;
 
-  @override
+  @overrideM
   State<CustomBottomNavigationBar> createState() =>
       _CustomBottomNavigationBarState();
 }
