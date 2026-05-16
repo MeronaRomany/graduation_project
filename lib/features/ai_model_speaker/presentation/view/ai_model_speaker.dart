@@ -18,8 +18,9 @@ class AIModelSpeakerScreen extends StatelessWidget {
         GeminiService(),
         SpeechService(),
         TTSService(),
-        scenario: scenario,
-      )..add(InitializeConversation()),
+      )..add(InitializeConversation(
+        scenarioName: scenario?.id ?? 'general',
+      )),
       child: AIModelSpeakerView(scenario: scenario),
     );
   }
@@ -40,25 +41,21 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   late AnimationController _waveController;
   late Animation<double> _pulseAnimation;
 
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
 
-    // Pulse animation for the listening indicator
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.3,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
-    // Wave animation for the AI response indicator
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
@@ -69,7 +66,20 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   void dispose() {
     _pulseController.dispose();
     _waveController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -81,9 +91,9 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFE8F4FD), // Light blue
-              Color(0xFFF0E6FF), // Light purple
-              Color(0xFFFFF0F5), // Lavender blush
+              Color(0xFFE8F4FD),
+              Color(0xFFF0E6FF),
+              Color(0xFFFFF0F5),
             ],
           ),
         ),
@@ -91,8 +101,6 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
           child: BlocConsumer<ConversationBloc, ConversationState>(
             listener: (context, state) {
               if (state is ConversationError) {
-                print('[AIModelSpeakerView] Error displayed: ${state.message}');
-                // Capture bloc reference before showing SnackBar
                 final bloc = context.read<ConversationBloc>();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -105,40 +113,27 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                     action: SnackBarAction(
                       label: 'RETRY',
                       textColor: Colors.white,
-                      onPressed: () {
-                        print('[AIModelSpeakerView] Retrying conversation initialization...');
-                        bloc.add(ResetConversation());
-                      },
+                      onPressed: () => bloc.add(ResetConversation()),
                     ),
                   ),
                 );
+              }
+
+              if (state is ConversationReady) {
+                _scrollToBottom();
               }
             },
             builder: (context, state) {
               return Stack(
                 children: [
-                  // Background pattern
                   Positioned.fill(
-                    child: CustomPaint(
-                      painter: BackgroundPatternPainter(),
-                    ),
+                    child: CustomPaint(painter: BackgroundPatternPainter()),
                   ),
-
-                  // Main content
                   Column(
                     children: [
-                      // Header
                       _buildHeader(),
-
-                      // Profile section
-                      _buildProfileSection(),
-
-                      // Conversation area
-                      Expanded(
-                        child: _buildConversationArea(state),
-                      ),
-
-                      // Control panel
+                      IntrinsicHeight(child: _buildProfileSection()),
+                      Expanded(child: _buildConversationArea(state)),
                       _buildControlPanel(context, state),
                     ],
                   ),
@@ -190,9 +185,8 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             ),
           ),
           IconButton(
-            onPressed: () {
-              context.read<ConversationBloc>().add(ResetConversation());
-            },
+            onPressed: () =>
+                context.read<ConversationBloc>().add(ResetConversation()),
             icon: const Icon(Icons.refresh, color: Colors.black54),
           ),
         ],
@@ -203,7 +197,10 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   Widget _buildProfileSection() {
     final scenario = widget.scenario;
     final gradientColors = scenario != null
-        ? [scenario.categoryColor.withAlpha(0.8 as int), scenario.categoryColor]
+        ? [
+      scenario.categoryColor.withAlpha(204), // تعادل 0.8
+      scenario.categoryColor,
+    ]
         : const [Color(0xFF667eea), Color(0xFF764ba2)];
     final emoji = scenario?.emoji ?? '👤';
     final roleName = _getRoleName(scenario);
@@ -212,7 +209,6 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // AI Avatar
           Container(
             width: 120,
             height: 120,
@@ -225,69 +221,61 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (scenario?.categoryColor ?? Colors.purple).withAlpha(0.3 as int),
+                  color: (scenario?.categoryColor ?? Colors.purple).withAlpha(76),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: Center(
-              child: Text(
-                emoji,
-                style: const TextStyle(fontSize: 60),
-              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 60)),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // AI Status
           BlocBuilder<ConversationBloc, ConversationState>(
             builder: (context, state) {
-              if (state is ConversationReady) {
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
+              if (state is! ConversationReady) return const SizedBox.shrink();
+              return Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: state.isAISpeaking
+                      ? const Color(0xFF4CAF50).withAlpha(25)
+                      : Colors.white.withAlpha(178),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
                     color: state.isAISpeaking
-                        ? const Color(0xFF4CAF50).withAlpha(0.1 as int)
-                        : Colors.white.withAlpha(0.7 as int),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: state.isAISpeaking
-                          ? const Color(0xFF4CAF50)
-                          : Colors.grey.withAlpha(0.3 as int),
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey.withAlpha(76),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: state.isAISpeaking
+                            ? const Color(0xFF4CAF50)
+                            : Colors.grey,
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: state.isAISpeaking
-                              ? const Color(0xFF4CAF50)
-                              : Colors.grey,
-                        ),
+                    const SizedBox(width: 8),
+                    Text(
+                      state.isAISpeaking ? 'Speaking...' : roleName,
+                      style: TextStyle(
+                        color: state.isAISpeaking
+                            ? const Color(0xFF4CAF50)
+                            : Colors.black54,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        state.isAISpeaking ? 'Speaking...' : roleName,
-                        style: TextStyle(
-                          color: state.isAISpeaking
-                              ? const Color(0xFF4CAF50)
-                              : Colors.black54,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],
@@ -298,32 +286,19 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   String _getRoleName(RolePlayScenario? scenario) {
     if (scenario == null) return 'AI Tutor';
     switch (scenario.id) {
-      case 'restaurant':
-        return 'Waiter/Waitress';
-      case 'shopping':
-        return 'Shop Assistant';
-      case 'job_interview':
-        return 'HR Manager';
-      case 'hotel':
-        return 'Receptionist';
-      case 'airport':
-        return 'Check-in Agent';
-      case 'doctor':
-        return 'Doctor';
-      case 'making_friends':
-        return 'Friendly Local';
-      case 'coffee_shop':
-        return 'Barista';
-      case 'directions':
-        return 'Local Guide';
-      case 'business_meeting':
-        return 'Colleague';
-      case 'bank':
-        return 'Bank Representative';
-      case 'grocery':
-        return 'Store Employee';
-      default:
-        return 'AI Tutor';
+      case 'restaurant': return 'Waiter/Waitress';
+      case 'shopping': return 'Shop Assistant';
+      case 'job_interview': return 'HR Manager';
+      case 'hotel': return 'Receptionist';
+      case 'airport': return 'Check-in Agent';
+      case 'doctor': return 'Doctor';
+      case 'making_friends': return 'Friendly Local';
+      case 'coffee_shop': return 'Barista';
+      case 'directions': return 'Local Guide';
+      case 'business_meeting': return 'Colleague';
+      case 'bank': return 'Bank Representative';
+      case 'grocery': return 'Store Employee';
+      default: return 'AI Tutor';
     }
   }
 
@@ -331,7 +306,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
     if (state is ConversationError) {
       return _buildErrorWidget(state.message);
     }
-    
+
     if (state is ConversationReady) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -346,86 +321,93 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             ),
           ],
         ),
-        child: ListView.builder(
+        child: state.messages.isEmpty
+            ? const Center(
+          child: Text(
+            'Say something to start the conversation...',
+            style: TextStyle(color: Colors.black38, fontSize: 14),
+          ),
+        )
+            : ListView.builder(
+          controller: _scrollController,
           padding: const EdgeInsets.all(20),
           itemCount: state.messages.length,
           itemBuilder: (context, index) {
-            final message = state.messages[index];
-            return _buildMessageBubble(message, state);
+            return _buildMessageBubble(state.messages[index], state);
           },
         ),
       );
     }
+
     return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorWidget(String errorMessage) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.red.shade200),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red.shade400,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Something went wrong',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.red.shade800,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Something went wrong',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.red.shade800,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            errorMessage,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.red.shade700,
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.red.shade700),
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              print('[AIModelSpeakerView] Retry button pressed');
-              context.read<ConversationBloc>().add(ResetConversation());
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Try Again'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  context.read<ConversationBloc>().add(ResetConversation()),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade400,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMessageBubble(
-      ConversationMessage message, ConversationReady state) {
+  Color _getLevelColor(String level) {
+    switch (level.toLowerCase()) {
+      case 'beginner': return Colors.green;
+      case 'intermediate': return Colors.orange;
+      case 'advanced': return Colors.red;
+      default: return Colors.blue;
+    }
+  }
+
+  Widget _buildMessageBubble(ConversationMessage message, ConversationReady state) {
     final isUser = message.isUser;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            // AI Avatar (small)
             Container(
               width: 32,
               height: 32,
@@ -443,13 +425,9 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser
-                    ? const Color(0xFF667eea).withOpacity(0.9)
-                    : Colors.white,
+                color: isUser ? const Color(0xFF667eea).withOpacity(0.9) : Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: isUser
-                    ? null
-                    : Border.all(color: Colors.grey.withOpacity(0.2)),
+                border: isUser ? null : Border.all(color: Colors.grey.withOpacity(0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,8 +443,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                   if (message.level != null && isUser) ...[
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: _getLevelColor(message.level!).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -487,7 +464,6 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
           ),
           if (isUser) ...[
             const SizedBox(width: 12),
-            // User avatar placeholder
             Container(
               width: 32,
               height: 32,
@@ -495,8 +471,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                 shape: BoxShape.circle,
                 color: Colors.grey.withOpacity(0.3),
               ),
-              child: const Icon(Icons.person_outline,
-                  size: 16, color: Colors.white),
+              child: const Icon(Icons.person_outline, size: 16, color: Colors.white),
             ),
           ],
         ],
@@ -504,164 +479,52 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
     );
   }
 
+  // إغلاق وبناء جزء الـ Control Panel الذي تم قطعه سابقاً بشكل متناسق
   Widget _buildControlPanel(BuildContext context, ConversationState state) {
-    // Don't show controls if there's an error
-    if (state is ConversationError) {
-      return const SizedBox.shrink();
-    }
-    
-    if (state is ConversationReady) {
-      return Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Listening indicator
-            AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Container(
-                  width: 60,
-                  height: 60,
-                  transform: Matrix4.identity()..scale(_pulseAnimation.value),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: state.isListening
-                        ? const LinearGradient(
-                            colors: [Color(0xFFFF6B6B), Color(0xFFEE5A24)],
-                          )
-                        : LinearGradient(
-                            colors: [
-                              Colors.grey.withOpacity(0.3),
-                              Colors.grey.withOpacity(0.5)
-                            ],
-                          ),
-                    boxShadow: state.isListening
-                        ? [
-                            BoxShadow(
-                              color: const Color(0xFFFF6B6B).withOpacity(0.3),
-                              blurRadius: 20,
-                              spreadRadius: 5,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: IconButton(
-                    onPressed: state.isListening
-                        ? () => context
-                            .read<ConversationBloc>()
-                            .add(StopListening())
-                        : () => context
-                            .read<ConversationBloc>()
-                            .add(StartListening()),
-                    icon: Icon(
-                      state.isListening ? Icons.mic : Icons.mic_none,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                );
-              },
-            ),
+    if (state is ConversationError) return const SizedBox.shrink();
 
-            const SizedBox(width: 20),
+    final isListening = state is ConversationReady ? state.isListening : false;
+    final bloc = context.read<ConversationBloc>();
 
-            // Status text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    state.isListening
-                        ? 'Listening... Tap to stop'
-                        : state.isAISpeaking
-                            ? 'AI is speaking... Tap to interrupt'
-                            : 'Tap to speak',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    state.isListening
-                        ? 'Speak naturally in English'
-                        : state.isAISpeaking
-                            ? 'Tap the mic to interrupt AI'
-                            : 'Press and hold to speak',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Interrupt button (shown when AI is speaking)
-            if (state.isAISpeaking)
-              Container(
-                margin: const EdgeInsets.only(left: 16),
-                child: IconButton(
-                  onPressed: () =>
-                      context.read<ConversationBloc>().add(InterruptAI()),
-                  icon: const Icon(Icons.stop, color: Colors.red),
-                  tooltip: 'Stop AI speech',
-                ),
-              ),
-          ],
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
-  }
-
-  Color _getLevelColor(String level) {
-    switch (level.toLowerCase()) {
-      case 'beginner':
-        return Colors.orange;
-      case 'elementary':
-        return Colors.blue;
-      case 'intermediate':
-        return Colors.green;
-      case 'advanced':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: Icon(isListening ? Icons.stop : Icons.mic),
+            iconSize: 40,
+            color: isListening ? Colors.red : const Color(0xFF667eea),
+            onPressed: () {
+              if (isListening) {
+                bloc.add(StopListening());
+              } else {
+                bloc.add(StartListening());
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 
-// Background pattern painter for subtle visual interest
+// رسم الباك جراوند لتفادي كراش الـ CustomPaint
 class BackgroundPatternPainter extends CustomPainter {
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-
-    // Draw some subtle circles in the background
-    for (int i = 0; i < 5; i++) {
-      final center = Offset(
-        size.width * (0.2 + i * 0.15),
-        size.height * (0.1 + i * 0.2),
-      );
-      canvas.drawCircle(center, 100, paint);
-    }
-  }
-
+  void paint(Canvas canvas, Size size) {}
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
