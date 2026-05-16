@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:graduation_app/core/utils/app_colors.dart';
 
+import '../../../../../route_management/app_router.dart';
+
 class CustomBottomNavigationBar extends StatefulWidget {
   const CustomBottomNavigationBar(
       {super.key, this.onItemTapped, required this.index});
@@ -14,8 +16,14 @@ class CustomBottomNavigationBar extends StatefulWidget {
 }
 
 class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
-  List<String> titles = ['Home', 'Add scenario', 'Chat Practice'];
-
+  List<String> titles = ['Home', 'Scenario', 'Chat Practice'];
+  TextEditingController customScenario= TextEditingController();
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    customScenario.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,7 +48,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
           child: Row(
             // mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            textDirection: TextDirection.ltr ,
+            textDirection: TextDirection.ltr,
             children: List.generate(
               titles.length,
               (index) {
@@ -48,99 +56,111 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                 return Flexible(
                   fit: FlexFit.loose,
                   child: GestureDetector(
-                      onTap: () {
-                        if (index == 1) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true, // 👈 1. هذا السطر يسمح للـ BottomSheet بالتوسع ليأخذ كامل الشاشة
-                            backgroundColor: Colors.white, // لون خلفية النافذة
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(24)), // زوايا دائرية علوية فقط
-                            ),
-                            builder: (context) {
-                              return Container(
-                                height: MediaQuery.of(context).size.height * 0.9,
-                                padding: EdgeInsets.only(
-                                  top: 20,
-                                  left: 20,
-                                  right: 20,
-                                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Container(
-                                      width: 40,
-                                      height: 4,
-                                      margin: const EdgeInsets.only(bottom: 20),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                    const Text(
-                                      'Write your scenario',
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
+                    onTap: () {
+                      widget.onItemTapped!(index);
 
-                                    Expanded(
-                                      child: TextField(
-                                        maxLines: null,
-                                        expands: true,
-                                        keyboardType: TextInputType.multiline,
-                                        textAlignVertical: TextAlignVertical.top,                                        decoration: InputDecoration(
-                                          hintText: 'Enter your text...',
-                                          alignLabelWithHint: true,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.black)
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: Colors.black)
-
-                                          ),
+                      if (index == 1) {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled:
+                          true,
+                          backgroundColor: Colors.white,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(
+                                    24)),
+                          ),
+                          builder: (context) {
+                            return Container(
+                              height: MediaQuery.of(context).size.height * 0.9,
+                              padding: EdgeInsets.only(
+                                top: 20,
+                                left: 20,
+                                right: 20,
+                                bottom:
+                                MediaQuery.of(context).viewInsets.bottom +
+                                    20,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 4,
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Write your scenario',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Expanded(
+                                    child: TextField(
+                                      controller:customScenario ,
+                                      maxLines: null,
+                                      expands: true,
+                                      keyboardType: TextInputType.multiline,
+                                      textAlignVertical: TextAlignVertical.top,
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter your text...',
+                                        alignLabelWithHint: true,
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                            BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                                color: Colors.black)),
+                                        enabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                            BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                                color: Colors.black)),
                                         focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                            borderSide: BorderSide(color: Colors.black)
-
-                                        ),
-                                        ),
+                                            borderRadius:
+                                            BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                                color: Colors.black)),
                                       ),
                                     ),
-                                    const SizedBox(height: 20),
-                                    ElevatedButton(
-                                      onPressed: () {
-
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF6200EE),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRouter.aiSpeaker,
+                                        arguments: customScenario.text,
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF6200EE),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
                                       ),
-                                      child: const Text(
-                                        "Custom Submit",
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16, horizontal: 24),
                                     ),
-
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-
-                        } else {
-                          widget.onItemTapped!(index);
-                        }
-                      },
+                                    child: const Text(
+                                      "Custom Submit",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    },
                     child: AnimatedContainer(
                       duration: Duration(milliseconds: 200),
                       child: AnimatedContainer(
@@ -159,8 +179,9 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                             color: isSelected
                                 ? Colors.white
                                 : AppColors.primaryColor,
-                            fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             fontSize: 16,
                           ),
                         ),
