@@ -8,7 +8,7 @@ class MainViewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IndexedStack(
-      index: currentIndex,
+      index:currentIndex == 2 ? 2 : 0,
       children: const [HomeView(), ChatPracticeView()],
     );
   }
