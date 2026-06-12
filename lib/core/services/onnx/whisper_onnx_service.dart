@@ -4,8 +4,7 @@ import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'onnx_service.dart';
 
 class WhisperOnnxService extends OnnxService {
-  WhisperOnnxService() : super('assets/models/stt_whisper_quant.onnx');
-
+  WhisperOnnxService(super.path);
   static const int _sampleRate = 16000;
   static const int _nMels = 80;
   static const int _nFFT = 400;
@@ -13,7 +12,6 @@ class WhisperOnnxService extends OnnxService {
   static const int _chunkSamples = 30 * _sampleRate;
   static const int _nFrames = 3000;
 
-  // Cache filterbank عشان ما نحسبهاش كل مرة
   List<List<double>>? _cachedFilterbank;
 
   Future<String> transcribe(Float32List audio) async {
@@ -21,6 +19,9 @@ class WhisperOnnxService extends OnnxService {
     if (audio.isEmpty) return '';
 
     try {
+      print("INPUT NAMES = ${session!.inputNames}");
+      print("OUTPUT NAMES = ${session!.outputNames}");
+
       // 1. Pad or trim
       final paddedAudio = _padOrTrimAudio(audio, _chunkSamples);
 
@@ -45,7 +46,9 @@ class WhisperOnnxService extends OnnxService {
       final raw = await result.asList();
 
       return _decodeTokens(raw);
-    } catch (e) {
+    } catch (e, s) {
+      print("WHISPER ERROR: $e");
+      print(s);
       return 'Transcription error: $e';
     }
   }
@@ -59,18 +62,15 @@ class WhisperOnnxService extends OnnxService {
     return out;
   }
 
-  // ─── Mel Spectrogram ──────────────────────────────────────────────────────
 
   Float32List _computeMelSpectrogram(Float32List audio) {
     final mel = Float32List(_nMels * _nFrames);
 
-    // Hann window
     final window = Float32List(_nFFT);
     for (int i = 0; i < _nFFT; i++) {
       window[i] = 0.5 * (1.0 - math.cos(2 * math.pi * i / (_nFFT - 1)));
     }
 
-    // Filterbank مع cache
     _cachedFilterbank ??= _melFilterbank(_nMels, _nFFT, _sampleRate);
     final filterbank = _cachedFilterbank!;
 
@@ -84,7 +84,6 @@ class WhisperOnnxService extends OnnxService {
         windowed[i] = (idx < audio.length ? audio[idx] : 0.0) * window[i];
       }
 
-      // FFT → power spectrum (Cooley-Tukey radix-2)
       final power = _fftPowerSpectrum(windowed);
 
       // Mel filterbank + log
@@ -111,7 +110,6 @@ class WhisperOnnxService extends OnnxService {
     return mel;
   }
 
-  // ─── FFT (Cooley-Tukey) بدل DFT O(n²) ───────────────────────────────────
 
   /// Returns power spectrum [nFFT/2 + 1] باستخدام FFT O(n log n)
   List<double> _fftPowerSpectrum(Float32List frame) {
@@ -212,7 +210,6 @@ class WhisperOnnxService extends OnnxService {
     });
   }
 
-  // ─── Token Decoder ────────────────────────────────────────────────────────
 
   String _decodeTokens(List<dynamic> tokens) {
     if (tokens.isEmpty) return '';

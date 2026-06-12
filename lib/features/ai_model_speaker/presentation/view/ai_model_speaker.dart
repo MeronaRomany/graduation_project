@@ -16,8 +16,8 @@ class AIModelSpeakerScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => ConversationBloc(
         GeminiService(),
-        SpeechService(),
-        TTSService(),
+        context.read<SpeechService>(),
+        context.read<TTSService>(),
       )..add(InitializeConversation(
         scenarioName: scenario?.id ?? 'general',
       )),
@@ -521,7 +521,6 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
   }
 }
 
-// رسم الباك جراوند لتفادي كراش الـ CustomPaint
 class BackgroundPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {}

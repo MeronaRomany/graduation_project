@@ -15,8 +15,7 @@ enum SpeechState {
 
 class SpeechService {
   final AudioRecorder _recorder = AudioRecorder();
-  final WhisperOnnxService _whisper = WhisperOnnxService();
-
+  late final WhisperOnnxService _whisper;
   bool _isListening = false;
   bool _isInit = false;
 
@@ -31,7 +30,9 @@ class SpeechService {
   Stream<void> get openSettings => _openSettings.stream;
 
   bool get isListening => _isListening;
-
+  SpeechService(
+      this._whisper,
+      );
   Future<bool> initialize() async {
     try {
       await _whisper.init();
@@ -79,16 +80,20 @@ class SpeechService {
       final bytes = await File(path).readAsBytes();
       final audio = _wavToFloat32(bytes);
 
+      if (audio.isEmpty) return;
+
       final text = await _whisper.transcribe(audio);
 
-      _result.add(text);
+      if (text.trim().isNotEmpty) {
+        _result.add(text);
+      }
+
       _state.add(SpeechState.completed);
     } catch (e) {
       _isListening = false;
       _error.add(e.toString());
     }
   }
-
   Float32List _wavToFloat32(Uint8List bytes) {
     if (bytes.length <= 44) return Float32List(0);
 
@@ -100,11 +105,11 @@ class SpeechService {
     );
   }
 
-  void dispose() {
+  Future<void> dispose() async {
     _result.close();
     _error.close();
     _state.close();
     _openSettings.close();
-    _recorder.dispose();
+    await _recorder.dispose();
   }
 }
