@@ -112,7 +112,10 @@ class _MyProgressViewState extends State<MyProgressView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Performance Over Time', style: AppTextStyles.bold19.copyWith(color: Colors.black87)),
+                        Expanded(
+                          child: Text('Performance Over Time', style: AppTextStyles.bold19.copyWith(color: Colors.black87)),
+                        ),
+                        const SizedBox(width: 8),
                         _buildTimeSpanSelector(context, state.selectedTimeSpan),
                       ],
                     ),
