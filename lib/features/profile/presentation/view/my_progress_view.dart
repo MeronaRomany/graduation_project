@@ -17,18 +17,20 @@ class MyProgressView extends StatefulWidget {
 }
 
 class _MyProgressViewState extends State<MyProgressView> {
-  String selectedMetric = 'overall'; // 'overall' | 'grammar' | 'vocabulary' | 'fluency' | 'pronunciation'
+  String selectedMetric =
+      'overall'; // 'overall' | 'grammar' | 'vocabulary' | 'fluency' | 'pronunciation'
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = ColorsManager.primary;
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFC),
       appBar: AppBar(
         title: const Text(
           'My Learning Progress',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black87),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black87),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -63,16 +65,19 @@ class _MyProgressViewState extends State<MyProgressView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+                    const Icon(Icons.error_outline,
+                        size: 60, color: Colors.redAccent),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16, color: Colors.black54),
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black54),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () => context.read<ProgressCubit>().loadProgress(),
+                      onPressed: () =>
+                          context.read<ProgressCubit>().loadProgress(),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Try Again'),
                       style: ElevatedButton.styleFrom(
@@ -87,14 +92,16 @@ class _MyProgressViewState extends State<MyProgressView> {
           }
 
           if (state is ProgressLoaded) {
-            final filteredEvals = _filterEvaluations(state.evaluations, state.selectedTimeSpan);
-            
+            final filteredEvals =
+                _filterEvaluations(state.evaluations, state.selectedTimeSpan);
+
             return RefreshIndicator(
               onRefresh: () => context.read<ProgressCubit>().loadProgress(),
               color: ColorsManager.primary,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -103,20 +110,31 @@ class _MyProgressViewState extends State<MyProgressView> {
                     const SizedBox(height: 24),
 
                     // Metrics Aggregates Grid
-                    Text('Skill Breakdown', style: AppTextStyles.bold19.copyWith(color: Colors.black87)),
+                    Text('Skill Breakdown',
+                        style: AppTextStyles.bold19
+                            .copyWith(color: Colors.black87)),
                     const SizedBox(height: 12),
                     _buildMetricsGrid(state.averageScores),
                     const SizedBox(height: 28),
 
                     // Graph Section Title & TimeSpan Selector
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text('Performance Over Time', style: AppTextStyles.bold19.copyWith(color: Colors.black87)),
+                        Text(
+                          'Performance Over Time',
+                          style: AppTextStyles.bold19.copyWith(
+                            color: Colors.black87,
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        _buildTimeSpanSelector(context, state.selectedTimeSpan),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _buildTimeSpanSelector(
+                            context,
+                            state.selectedTimeSpan,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -130,13 +148,17 @@ class _MyProgressViewState extends State<MyProgressView> {
                     const SizedBox(height: 28),
 
                     // Insights Section
-                    Text('💡 AI Learning Insights', style: AppTextStyles.bold19.copyWith(color: Colors.black87)),
+                    Text('💡 AI Learning Insights',
+                        style: AppTextStyles.bold19
+                            .copyWith(color: Colors.black87)),
                     const SizedBox(height: 12),
                     _buildInsightsList(state.insights),
                     const SizedBox(height: 28),
 
                     // Session by Session analysis
-                    Text('Session History', style: AppTextStyles.bold19.copyWith(color: Colors.black87)),
+                    Text('Session History',
+                        style: AppTextStyles.bold19
+                            .copyWith(color: Colors.black87)),
                     const SizedBox(height: 12),
                     _buildSessionHistory(filteredEvals),
                   ],
@@ -151,7 +173,8 @@ class _MyProgressViewState extends State<MyProgressView> {
     );
   }
 
-  List<SessionEvaluation> _filterEvaluations(List<SessionEvaluation> evals, String timeSpan) {
+  List<SessionEvaluation> _filterEvaluations(
+      List<SessionEvaluation> evals, String timeSpan) {
     final now = DateTime.now();
     if (timeSpan == 'days') {
       final cutoff = now.subtract(const Duration(days: 7));
@@ -196,17 +219,26 @@ class _MyProgressViewState extends State<MyProgressView> {
               children: [
                 const Text(
                   'Overall Proficiency',
-                  style: TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   '${overallScore.toStringAsFixed(1)}%',
-                  style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   _getProficiencyStatus(overallScore),
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -242,15 +274,20 @@ class _MyProgressViewState extends State<MyProgressView> {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.5,
       children: [
-        _buildMetricGridCard('Grammar', averages['grammar'] ?? 0.0, Colors.blue, Icons.g_translate_outlined),
-        _buildMetricGridCard('Vocabulary', averages['vocabulary'] ?? 0.0, Colors.orange, Icons.menu_book_outlined),
-        _buildMetricGridCard('Fluency', averages['fluency'] ?? 0.0, Colors.purple, Icons.speed_outlined),
-        _buildMetricGridCard('Pronunciation', averages['pronunciation'] ?? 0.0, Colors.green, Icons.keyboard_voice_outlined),
+        _buildMetricGridCard('Grammar', averages['grammar'] ?? 0.0, Colors.blue,
+            Icons.g_translate_outlined),
+        _buildMetricGridCard('Vocabulary', averages['vocabulary'] ?? 0.0,
+            Colors.orange, Icons.menu_book_outlined),
+        _buildMetricGridCard('Fluency', averages['fluency'] ?? 0.0,
+            Colors.purple, Icons.speed_outlined),
+        _buildMetricGridCard('Pronunciation', averages['pronunciation'] ?? 0.0,
+            Colors.green, Icons.keyboard_voice_outlined),
       ],
     );
   }
 
-  Widget _buildMetricGridCard(String label, double score, Color color, IconData icon) {
+  Widget _buildMetricGridCard(
+      String label, double score, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -274,7 +311,10 @@ class _MyProgressViewState extends State<MyProgressView> {
             children: [
               Text(
                 label,
-                style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500),
               ),
               Icon(icon, color: color, size: 20),
             ],
@@ -285,11 +325,17 @@ class _MyProgressViewState extends State<MyProgressView> {
             children: [
               Text(
                 '${score.toStringAsFixed(1)}',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87),
               ),
               Text(
                 '%',
-                style: TextStyle(fontSize: 12, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -327,7 +373,8 @@ class _MyProgressViewState extends State<MyProgressView> {
         children: options.entries.map((entry) {
           final isSelected = selectedSpan == entry.key;
           return GestureDetector(
-            onTap: () => context.read<ProgressCubit>().changeTimeSpan(entry.key),
+            onTap: () =>
+                context.read<ProgressCubit>().changeTimeSpan(entry.key),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -386,7 +433,9 @@ class _MyProgressViewState extends State<MyProgressView> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: isSelected ? ColorsManager.primary : Colors.grey.withOpacity(0.2),
+                  color: isSelected
+                      ? ColorsManager.primary
+                      : Colors.grey.withOpacity(0.2),
                 ),
               ),
             ),
@@ -416,7 +465,8 @@ class _MyProgressViewState extends State<MyProgressView> {
     }
 
     final spots = _getSpots(evals, selectedMetric);
-    final sorted = List<SessionEvaluation>.from(evals)..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final sorted = List<SessionEvaluation>.from(evals)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     return Container(
       height: 260,
@@ -446,8 +496,10 @@ class _MyProgressViewState extends State<MyProgressView> {
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -460,7 +512,10 @@ class _MyProgressViewState extends State<MyProgressView> {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         DateFormat('MM/dd').format(sorted[idx].timestamp),
-                        style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold),
                       ),
                     );
                   }
@@ -475,7 +530,10 @@ class _MyProgressViewState extends State<MyProgressView> {
                 getTitlesWidget: (value, meta) {
                   return Text(
                     '${value.toInt()}',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   );
                 },
                 reservedSize: 28,
@@ -496,7 +554,8 @@ class _MyProgressViewState extends State<MyProgressView> {
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: spots.length <= 15,
-                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
                   radius: 4,
                   color: Colors.white,
                   strokeWidth: 3,
@@ -523,17 +582,28 @@ class _MyProgressViewState extends State<MyProgressView> {
 
   List<FlSpot> _getSpots(List<SessionEvaluation> evals, String metric) {
     if (evals.isEmpty) return [const FlSpot(0, 0)];
-    final sorted = List<SessionEvaluation>.from(evals)..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final sorted = List<SessionEvaluation>.from(evals)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
     final spots = <FlSpot>[];
     for (int i = 0; i < sorted.length; i++) {
       final eval = sorted[i];
       double val = 0.0;
       switch (metric) {
-        case 'grammar': val = eval.grammarScore.toDouble(); break;
-        case 'vocabulary': val = eval.vocabularyScore.toDouble(); break;
-        case 'fluency': val = eval.fluencyScore.toDouble(); break;
-        case 'pronunciation': val = eval.pronunciationScore.toDouble(); break;
-        default: val = eval.overallScore.toDouble(); break;
+        case 'grammar':
+          val = eval.grammarScore.toDouble();
+          break;
+        case 'vocabulary':
+          val = eval.vocabularyScore.toDouble();
+          break;
+        case 'fluency':
+          val = eval.fluencyScore.toDouble();
+          break;
+        case 'pronunciation':
+          val = eval.pronunciationScore.toDouble();
+          break;
+        default:
+          val = eval.overallScore.toDouble();
+          break;
       }
       spots.add(FlSpot(i.toDouble(), val));
     }
@@ -616,9 +686,11 @@ class _MyProgressViewState extends State<MyProgressView> {
             side: BorderSide(color: Colors.grey.withOpacity(0.15)),
           ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: CircleAvatar(
-              backgroundColor: _getScoreColor(eval.overallScore).withOpacity(0.1),
+              backgroundColor:
+                  _getScoreColor(eval.overallScore).withOpacity(0.1),
               child: Text(
                 _getEmoji(eval.topic),
                 style: const TextStyle(fontSize: 20),
@@ -626,7 +698,10 @@ class _MyProgressViewState extends State<MyProgressView> {
             ),
             title: Text(
               _formatTopic(eval.topic),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87),
             ),
             subtitle: Text(
               DateFormat.yMMMd().format(eval.timestamp),
@@ -636,7 +711,8 @@ class _MyProgressViewState extends State<MyProgressView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _getScoreColor(eval.overallScore).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -651,7 +727,8 @@ class _MyProgressViewState extends State<MyProgressView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 14, color: Colors.grey),
               ],
             ),
             onTap: () => _showSessionDetails(context, eval),
@@ -670,26 +747,41 @@ class _MyProgressViewState extends State<MyProgressView> {
 
   String _getEmoji(String topic) {
     switch (topic.toLowerCase()) {
-      case 'restaurant': return '🍔';
-      case 'shopping': return '🛍️';
-      case 'job_interview': return '💼';
-      case 'hotel': return '🏨';
-      case 'airport': return '✈️';
-      case 'doctor': return '🩺';
-      case 'making_friends': return '🤝';
-      case 'coffee_shop': return '☕';
-      case 'directions': return '📍';
-      case 'business_meeting': return '👔';
-      case 'bank': return '🏦';
-      case 'grocery': return '🛒';
-      default: return '💬';
+      case 'restaurant':
+        return '🍔';
+      case 'shopping':
+        return '🛍️';
+      case 'job_interview':
+        return '💼';
+      case 'hotel':
+        return '🏨';
+      case 'airport':
+        return '✈️';
+      case 'doctor':
+        return '🩺';
+      case 'making_friends':
+        return '🤝';
+      case 'coffee_shop':
+        return '☕';
+      case 'directions':
+        return '📍';
+      case 'business_meeting':
+        return '👔';
+      case 'bank':
+        return '🏦';
+      case 'grocery':
+        return '🛒';
+      default:
+        return '💬';
     }
   }
 
   String _formatTopic(String topic) {
     if (topic == 'general') return 'General English Practice';
     final parts = topic.split('_');
-    return parts.map((p) => p.isEmpty ? '' : '${p[0].toUpperCase()}${p.substring(1)}').join(' ');
+    return parts
+        .map((p) => p.isEmpty ? '' : '${p[0].toUpperCase()}${p.substring(1)}')
+        .join(' ');
   }
 
   void _showSessionDetails(BuildContext context, SessionEvaluation eval) {
@@ -737,19 +829,27 @@ class _MyProgressViewState extends State<MyProgressView> {
                           children: [
                             Text(
                               _formatTopic(eval.topic),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Colors.black87),
                             ),
                             Text(
-                              DateFormat.yMMMd().add_jm().format(eval.timestamp),
-                              style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                              DateFormat.yMMMd()
+                                  .add_jm()
+                                  .format(eval.timestamp),
+                              style: TextStyle(
+                                  color: Colors.grey[500], fontSize: 13),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _getScoreColor(eval.overallScore).withOpacity(0.1),
+                          color: _getScoreColor(eval.overallScore)
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
@@ -766,18 +866,27 @@ class _MyProgressViewState extends State<MyProgressView> {
                   const Divider(height: 32),
                   const Text(
                     'Skills Scores',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black87),
                   ),
                   const SizedBox(height: 12),
                   _buildScoreRow('Grammar', eval.grammarScore, Colors.blue),
-                  _buildScoreRow('Vocabulary', eval.vocabularyScore, Colors.orange),
+                  _buildScoreRow(
+                      'Vocabulary', eval.vocabularyScore, Colors.orange),
                   _buildScoreRow('Fluency', eval.fluencyScore, Colors.purple),
-                  _buildScoreRow('Mistakes Avoidance', eval.mistakesScore, Colors.redAccent),
-                  _buildScoreRow('Pronunciation', eval.pronunciationScore, Colors.green),
+                  _buildScoreRow('Mistakes Avoidance', eval.mistakesScore,
+                      Colors.redAccent),
+                  _buildScoreRow(
+                      'Pronunciation', eval.pronunciationScore, Colors.green),
                   const Divider(height: 32),
                   const Text(
                     'AI Feedback & Recommendations',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black87),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -789,7 +898,8 @@ class _MyProgressViewState extends State<MyProgressView> {
                     ),
                     child: Text(
                       eval.feedback,
-                      style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+                      style: const TextStyle(
+                          fontSize: 14, color: Colors.black87, height: 1.6),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -803,7 +913,9 @@ class _MyProgressViewState extends State<MyProgressView> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Close Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    child: const Text('Close Details',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
                 ],
               );
@@ -824,11 +936,15 @@ class _MyProgressViewState extends State<MyProgressView> {
             children: [
               Text(
                 skill,
-                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.black87),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    color: Colors.black87),
               ),
               Text(
                 '$score%',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 14, color: color),
               ),
             ],
           ),
