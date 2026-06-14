@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:graduation_app/services/user_storage_services.dart';
 
 import '../models/user_model_auth.dart';
+import '../models/session_evaluation_model.dart';
 class FireStoreService{
   final UserStorageService _userStorageService = UserStorageService();
 
@@ -108,4 +109,25 @@ class FireStoreService{
     return null;
   }
 
+  Future<void> saveSessionEvaluation(SessionEvaluation evaluation) async {
+    final uid = evaluation.userId;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('session_evaluations')
+        .add(evaluation.toMap());
+  }
+
+  Future<List<SessionEvaluation>> getSessionEvaluations(String uid) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('session_evaluations')
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    return querySnapshot.docs.map((doc) {
+      return SessionEvaluation.fromMap(doc.data(), doc.id);
+    }).toList();
+  }
 }
