@@ -22,4 +22,18 @@ class UserModel {
       email: json["email"] ?? '',
     );
   }
+
+  UserModel copyWith({
+    String? uid,
+    String? name,
+    String? email,
+    String? level,
+  }) {
+    return UserModel(
+      uid: uid ?? this.uid,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      level: level ?? this.level,
+    );
+  }
 }
