@@ -4,6 +4,7 @@ import 'package:graduation_app/features/ai_model_speaker/presentation/view/ai_mo
 import 'package:graduation_app/features/chat_practice/screens/chat_practice_audio_screen.dart';
 import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 import 'package:graduation_app/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:graduation_app/features/profile/presentation/cubit/progress_cubit.dart';
 import 'package:graduation_app/features/profile/presentation/view/edit_profile_view.dart';
 import 'package:graduation_app/features/profile/presentation/view/help_support_view.dart';
 import 'package:graduation_app/features/profile/presentation/view/my_progress_view.dart';
@@ -68,8 +69,11 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SettingsView());
       case MyProgressView.routeName:
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => ProfileCubit()..loadUserProfile(),
+          builder: (_) => MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => ProfileCubit()..loadUserProfile()),
+              BlocProvider(create: (_) => ProgressCubit()..loadProgress()),
+            ],
             child: const MyProgressView(),
           ),
         );
