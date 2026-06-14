@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_app/core/theme/colors_manager.dart';
 import 'package:graduation_app/core/utils/app_text_styles.dart';
-import 'package:graduation_app/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:graduation_app/features/profile/presentation/cubit/progress_cubit.dart';
 import 'package:graduation_app/features/profile/presentation/cubit/progress_state.dart';
 import 'package:graduation_app/models/session_evaluation_model.dart';
@@ -204,7 +203,7 @@ class _MyProgressViewState extends State<MyProgressView> {
                 const SizedBox(height: 6),
                 Text(
                   _getProficiencyStatus(overallScore),
-                  style: const TextStyle(color: Colors.white90, fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -611,7 +610,7 @@ class _MyProgressViewState extends State<MyProgressView> {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.15)),
+            side: BorderSide(color: Colors.grey.withOpacity(0.15)),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
