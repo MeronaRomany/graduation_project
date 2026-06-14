@@ -67,15 +67,15 @@ class RolePlayCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: scenario.difficultyColor.withOpacity(0.9),
+                          color: scenario.cefrColor.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          scenario.difficultyLabel,
+                          scenario.cefrLabel,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),

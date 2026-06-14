@@ -42,6 +42,19 @@ class FireStoreService{
     return getUserData;
   }
 
+  Future<void> updateUser(String uid, {String? name, String? email}) async {
+    final updates = <String, dynamic>{};
+    if (name != null) updates['name'] = name;
+    if (email != null) updates['email'] = email;
+    if (updates.isNotEmpty) {
+      await FirebaseFirestore.instance.collection("users").doc(uid).update(updates);
+    }
+  }
+
+  Future<void> deleteUser(String uid) async {
+    await FirebaseFirestore.instance.collection("users").doc(uid).delete();
+  }
+
    Future<void> addToQueue(String channelId) async {
     await FirebaseFirestore.instance.collection('chat_practice_queue').doc(((await userModel).uid)).set({
       'name': (await userModel).name,

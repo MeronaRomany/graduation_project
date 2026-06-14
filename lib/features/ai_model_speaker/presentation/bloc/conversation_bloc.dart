@@ -330,6 +330,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           starterMessage: "",
           difficulty: DifficultyLevel.beginner,
           category: ScenarioCategory.dailyLife,
+          cefrLevel: CefrLevel.a12,
         );
       }
 
