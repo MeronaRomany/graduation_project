@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'hf_spaces_service.dart';
 import 'onnx/vits_onnx_service.dart';
+import 'voice_provider.dart';
 
 enum TTSState {
   idle,
@@ -16,6 +18,8 @@ enum TTSState {
 
 class TTSService {
   final VITSOnnxService _vits;
+  final HfSpacesService _hfSpaces;
+  final VoiceProviderCubit _voiceProvider;
   final AudioPlayer _player = AudioPlayer();
 
   bool _isReady = false;
@@ -27,7 +31,11 @@ class TTSService {
   Stream<TTSState> get state => _state.stream;
   Stream<String> get error => _error.stream;
 
-  TTSService(this._vits);
+  TTSService(
+    this._vits,
+    this._hfSpaces,
+    this._voiceProvider,
+  );
 
   Future<void> initialize() async {
     _state.add(TTSState.initializing);
@@ -52,13 +60,22 @@ class TTSService {
       _isSpeaking = true;
       _state.add(TTSState.speaking);
 
-      final audio = await _vits.generateSpeech(text);
-      final wav = _toWav(audio, 22050);
+      Uint8List? audioBytes;
+
+      // Try HF Spaces TTS first when in cloud mode
+      if (_voiceProvider.state.isCloud) {
+        audioBytes = await _hfSpaces.generateSpeech(text);
+      }
+
+      // Fall back to local VITS ONNX if cloud failed or in local mode
+      if (audioBytes == null || audioBytes.isEmpty) {
+        final samples = await _vits.generateSpeech(text);
+        audioBytes = _toWav(samples, 22050);
+      }
 
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/tts.wav');
-
-      await file.writeAsBytes(wav);
+      final file = File('${dir.path}/tts_output.wav');
+      await file.writeAsBytes(audioBytes);
 
       await _player.play(DeviceFileSource(file.path));
     } catch (e) {
@@ -75,7 +92,7 @@ class TTSService {
   }
 
   Future<void> dispose() async {
-     _player.dispose();
+    _player.dispose();
     await _state.close();
     await _error.close();
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:graduation_app/core/services/voice_provider.dart';
 import 'package:graduation_app/core/theme/colors_manager.dart';
 import 'package:graduation_app/core/theme/theme_cubit.dart';
 import 'package:graduation_app/core/utils/app_text_styles.dart';
@@ -34,6 +35,47 @@ class SettingsView extends StatelessWidget {
                   },
                   activeThumbColor: ColorsManager.primary,
                 ),
+              ),
+              const SizedBox(height: 24),
+              _buildSectionHeader('Voice Engine'),
+              const SizedBox(height: 8),
+              BlocBuilder<VoiceProviderCubit, VoiceProviderState>(
+                builder: (context, voiceState) {
+                  return Column(
+                    children: [
+                      _buildSettingsTile(
+                        icon: Icons.cloud,
+                        title: 'Cloud (HF Spaces)',
+                        subtitle: 'Online — uses Hugging Face API',
+                        trailing: Radio<VoiceMode>(
+                          value: VoiceMode.cloud,
+                          groupValue: voiceState.mode,
+                          onChanged: (mode) {
+                            if (mode != null) {
+                              context.read<VoiceProviderCubit>().setMode(mode);
+                            }
+                          },
+                          activeColor: ColorsManager.primary,
+                        ),
+                      ),
+                      _buildSettingsTile(
+                        icon: Icons.phone_android,
+                        title: 'Local (ONNX)',
+                        subtitle: 'Offline — on-device models',
+                        trailing: Radio<VoiceMode>(
+                          value: VoiceMode.local,
+                          groupValue: voiceState.mode,
+                          onChanged: (mode) {
+                            if (mode != null) {
+                              context.read<VoiceProviderCubit>().setMode(mode);
+                            }
+                          },
+                          activeColor: ColorsManager.primary,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 24),
               _buildSectionHeader('About'),

@@ -5,7 +5,9 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import 'hf_spaces_service.dart';
 import 'onnx/whisper_onnx_service.dart';
+import 'voice_provider.dart';
 
 enum SpeechState {
   idle,
@@ -15,24 +17,29 @@ enum SpeechState {
 
 class SpeechService {
   final AudioRecorder _recorder = AudioRecorder();
-  late final WhisperOnnxService _whisper;
+  final WhisperOnnxService _whisper;
+  final HfSpacesService _hfSpaces;
+  final VoiceProviderCubit _voiceProvider;
+
   bool _isListening = false;
   bool _isInit = false;
 
   final StreamController<String> _result = StreamController.broadcast();
   final StreamController<String> _error = StreamController.broadcast();
   final StreamController<SpeechState> _state = StreamController.broadcast();
-  final StreamController<void> _openSettings = StreamController.broadcast();
 
   Stream<String> get result => _result.stream;
   Stream<String> get error => _error.stream;
   Stream<SpeechState> get state => _state.stream;
-  Stream<void> get openSettings => _openSettings.stream;
 
   bool get isListening => _isListening;
+
   SpeechService(
-      this._whisper,
-      );
+    this._whisper,
+    this._hfSpaces,
+    this._voiceProvider,
+  );
+
   Future<bool> initialize() async {
     try {
       await _whisper.init();
@@ -78,13 +85,22 @@ class SpeechService {
       if (path == null) return;
 
       final bytes = await File(path).readAsBytes();
-      final audio = _wavToFloat32(bytes);
+      String? text;
 
-      if (audio.isEmpty) return;
+      // Try HF Spaces STT first when in cloud mode
+      if (_voiceProvider.state.isCloud) {
+        text = await _hfSpaces.recognizeSpeech(bytes);
+      }
 
-      final text = await _whisper.transcribe(audio);
+      // Fall back to local Whisper ONNX if cloud failed or in local mode
+      if (text == null || text.trim().isEmpty) {
+        final audio = _wavToFloat32(bytes);
+        if (audio.isNotEmpty) {
+          text = await _whisper.transcribe(audio);
+        }
+      }
 
-      if (text.trim().isNotEmpty) {
+      if (text != null && text.trim().isNotEmpty) {
         _result.add(text);
       }
 
@@ -94,6 +110,7 @@ class SpeechService {
       _error.add(e.toString());
     }
   }
+
   Float32List _wavToFloat32(Uint8List bytes) {
     if (bytes.length <= 44) return Float32List(0);
 
@@ -109,7 +126,6 @@ class SpeechService {
     _result.close();
     _error.close();
     _state.close();
-    _openSettings.close();
     await _recorder.dispose();
   }
 }
