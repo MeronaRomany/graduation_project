@@ -150,7 +150,7 @@ $personalizedPrompt
 
 USER MESSAGE: "$userMessage"
 
-Please respond as an English language tutor. Keep your response conversational, educational, and engaging. If the user made any errors, correct them gently and explain why. Ask follow-up questions to continue the conversation.
+Please respond as an English language tutor. Keep your response conversational, educational, and engaging. STRICTLY IDENTIFY AND CORRECT EVERY SINGLE ENGLISH MISTAKE the user makes in their response. DO NOT SKIP ANY MISTAKE, no matter how small. Give clear notes on the mistakes made and explain why. Ask follow-up questions to continue the conversation.
 
 Remember to:
 - Be encouraging and supportive
