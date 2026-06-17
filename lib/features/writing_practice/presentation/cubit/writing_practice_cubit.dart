@@ -56,6 +56,8 @@ class WritingPracticeCubit extends Cubit<WritingPracticeState> {
         userLevel: currentState.userLevel,
       );
       emit(WritingAnalysisSuccess(analysis));
+      // Restore loaded state so the UI behind the navigation stays visible
+      emit(currentState);
     } catch (e) {
       emit(WritingPracticeError(e.toString()));
       // Recover to loaded state so user can try again
