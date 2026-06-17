@@ -35,7 +35,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
       body: BlocConsumer<WritingPracticeCubit, WritingPracticeState>(
         listener: (context, state) {
           if (state is WritingAnalysisSuccess) {
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => WritingAnalysisScreen(analysis: state.analysis),
@@ -49,7 +49,6 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
         },
         builder: (context, state) {
           if (state is WritingPracticeInitial) {
-            context.read<WritingPracticeCubit>().loadScenarios();
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -78,7 +77,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
 
   Widget _buildContent(BuildContext context, WritingPracticeLoaded state) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

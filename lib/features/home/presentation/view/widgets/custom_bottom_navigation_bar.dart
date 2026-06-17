@@ -35,8 +35,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
             textDirection: TextDirection.ltr,
             children: [
               _buildNavItem(0, 'Home', Icons.home_outlined, Icons.home),
+              _buildNavItem(1, 'Chat', Icons.chat_bubble_outline, Icons.chat_bubble),
               _buildPlusButton(context),
-              _buildNavItem(2, 'Chat Practice', Icons.chat_bubble_outline, Icons.chat_bubble),
+              _buildNavItem(2, 'Writing', Icons.edit_outlined, Icons.edit),
             ],
           ),
         ),
