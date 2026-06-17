@@ -135,9 +135,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
 
   Widget _buildTaskCard(BuildContext context, WritingPracticeLoaded state) {
     final scenario = state.selectedScenario!;
-    final tasks = scenario.writingTasks[DifficultyLevel.intermediate] ?? 
-                 scenario.writingTasks[DifficultyLevel.beginner] ?? 
-                 ['Write about your experience in this scenario.'];
+    final taskText = 'Write about your experience in the following scenario: ${scenario.title}. Use the suggested vocabulary if possible.';
     
     return Container(
       width: double.infinity,
@@ -159,7 +157,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            tasks.first, // For simplicity picking first task
+            taskText,
             style: AppTextStyles.medium15,
           ),
         ],

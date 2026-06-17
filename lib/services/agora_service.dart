@@ -113,8 +113,6 @@ class AgoraService {
   }
 
   Future<void> initializeAndUseWaitingRoom() async {
-    int randomUid = math.Random().nextInt(1000000);
-    
     await initializeAndJoin(channelId: "testgroup1", token: Secrets.agoraToken);
   }
 

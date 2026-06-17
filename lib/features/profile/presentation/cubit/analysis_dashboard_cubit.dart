@@ -36,7 +36,7 @@ class AnalysisDashboardState {
   double get avgWritingScore => _avg(SessionType.writing);
 
   double _avg(SessionType type) {
-    final s = filteredSessions.where((s) => s.sessionType == type);
+    final s = filteredSessions.where((s) => s.type == type);
     if (s.isEmpty) return 0.0;
     return s.map((e) => e.overallScore).average;
   }
