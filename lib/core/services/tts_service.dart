@@ -24,6 +24,9 @@ class TTSService {
 
   bool _isReady = false;
   bool _isSpeaking = false;
+  
+  final List<String> _sentenceQueue = [];
+  bool _isProcessingQueue = false;
 
   final _state = StreamController<TTSState>.broadcast();
   final _error = StreamController<String>.broadcast();
@@ -45,7 +48,12 @@ class TTSService {
     _player.onPlayerStateChanged.listen((s) {
       if (s == PlayerState.completed) {
         _isSpeaking = false;
-        _state.add(TTSState.idle);
+        if (_sentenceQueue.isNotEmpty) {
+          _processQueue();
+        } else {
+          _isProcessingQueue = false;
+          _state.add(TTSState.idle);
+        }
       }
     });
 
@@ -54,27 +62,62 @@ class TTSService {
   }
 
   Future<void> speak(String text) async {
-    if (!_isReady || _isSpeaking) return;
+    if (!_isReady) return;
+
+    _sentenceQueue.clear();
+    await _player.stop();
+    _isSpeaking = false;
+
+    // Split text into sentences using punctuation marks
+    final RegExp sentenceSplitter = RegExp(r'(?<=[.!?])\s+');
+    final sentences = text.split(sentenceSplitter).where((s) => s.trim().isNotEmpty).toList();
+
+    if (sentences.isEmpty) {
+      // If regex didn't match (no punctuation), just add the whole text
+      if (text.trim().isNotEmpty) {
+        _sentenceQueue.add(text.trim());
+      }
+    } else {
+      _sentenceQueue.addAll(sentences);
+    }
+
+    if (!_isProcessingQueue && _sentenceQueue.isNotEmpty) {
+      _isProcessingQueue = true;
+      _state.add(TTSState.speaking);
+      _processQueue();
+    }
+  }
+
+  Future<void> _processQueue() async {
+    if (_sentenceQueue.isEmpty || !_isReady) {
+      _isProcessingQueue = false;
+      _isSpeaking = false;
+      _state.add(TTSState.idle);
+      return;
+    }
+
+    final String nextSentence = _sentenceQueue.removeAt(0);
+    _isSpeaking = true;
+    _state.add(TTSState.speaking);
 
     try {
-      _isSpeaking = true;
-      _state.add(TTSState.speaking);
-
       Uint8List? audioBytes;
 
       // Try HF Spaces TTS first when in cloud mode
       if (_voiceProvider.state.isCloud) {
-        audioBytes = await _hfSpaces.generateSpeech(text);
+        audioBytes = await _hfSpaces.generateSpeech(nextSentence);
       }
 
       // Fall back to local VITS ONNX if cloud failed or in local mode
       if (audioBytes == null || audioBytes.isEmpty) {
-        final samples = await _vits.generateSpeech(text);
+        final samples = await _vits.generateSpeech(nextSentence);
         audioBytes = _toWav(samples, 22050);
       }
 
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/tts_output.wav');
+      // Use timestamp in filename to avoid file lock issues when overriding
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File('${dir.path}/tts_output_$timestamp.wav');
       await file.writeAsBytes(audioBytes);
 
       await _player.play(DeviceFileSource(file.path));
@@ -82,10 +125,20 @@ class TTSService {
       _isSpeaking = false;
       _state.add(TTSState.error);
       _error.add(e.toString());
+      
+      // Continue with the next sentence if an error occurs
+      if (_sentenceQueue.isNotEmpty) {
+        _processQueue();
+      } else {
+        _isProcessingQueue = false;
+        _state.add(TTSState.idle);
+      }
     }
   }
 
   Future<void> stop() async {
+    _sentenceQueue.clear();
+    _isProcessingQueue = false;
     await _player.stop();
     _isSpeaking = false;
     _state.add(TTSState.idle);

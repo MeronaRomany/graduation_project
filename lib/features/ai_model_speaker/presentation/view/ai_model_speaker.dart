@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/conversation_bloc.dart';
@@ -379,9 +380,9 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF667eea)),
+                  width: 20,
+                  height: 20,
+                  child: SoundWaveLoading(size: 20, color: Color(0xFF667eea)),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -610,7 +611,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                   ? const SizedBox(
                       width: 40,
                       height: 40,
-                      child: CircularProgressIndicator(strokeWidth: 3),
+                      child: SoundWaveLoading(size: 40, color: Colors.grey),
                     )
                   : Stack(
                       alignment: Alignment.center,
@@ -937,6 +938,65 @@ class _TypewriterTextState extends State<TypewriterText> with SingleTickerProvid
         String visibleString = widget.text.substring(0, _characterCount.value);
         return Text(visibleString, style: widget.style);
       },
+    );
+  }
+}
+
+class SoundWaveLoading extends StatefulWidget {
+  final Color color;
+  final double size;
+
+  const SoundWaveLoading({super.key, this.color = Colors.white, this.size = 24.0});
+
+  @override
+  State<SoundWaveLoading> createState() => _SoundWaveLoadingState();
+}
+
+class _SoundWaveLoadingState extends State<SoundWaveLoading> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: List.generate(4, (index) {
+          return AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final t = (_controller.value * 2 * math.pi) + (index * 1.5);
+              final heightPercent = (math.sin(t) + 1.0) / 2.0; 
+              final height = widget.size * 0.3 + (widget.size * 0.7 * heightPercent);
+              return Container(
+                width: widget.size * 0.15,
+                height: height,
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              );
+            },
+          );
+        }),
+      ),
     );
   }
 }

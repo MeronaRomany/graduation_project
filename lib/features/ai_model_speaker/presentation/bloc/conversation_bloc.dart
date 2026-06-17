@@ -517,9 +517,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     await _ttsSub.cancel();
     await _ttsErrorSub.cancel();
 
-    await _speechService.dispose();
-    await _ttsService.dispose();
-
     return super.close();
   }
 }
