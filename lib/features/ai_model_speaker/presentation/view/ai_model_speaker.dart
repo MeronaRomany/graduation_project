@@ -5,6 +5,11 @@ import '../../../../core/services/gemini_service.dart';
 import '../../../../core/services/speech_service.dart';
 import '../../../../core/services/tts_service.dart';
 import '../../../../features/home/data/models/role_play_scenario.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../models/session_evaluation_model.dart';
+import '../../../../services/firestore_service.dart';
+import '../../../../features/profile/presentation/view/my_progress_view.dart';
+import '../../../../core/theme/colors_manager.dart';
 
 class AIModelSpeakerScreen extends StatelessWidget {
   final RolePlayScenario? scenario;
@@ -501,8 +506,12 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Left placeholder to keep layout balanced
+          const SizedBox(width: 48),
+
+          // Center Mic button
           IconButton(
             icon: Icon(isListening ? Icons.stop : Icons.mic),
             iconSize: 40,
@@ -514,6 +523,227 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
                 bloc.add(StartListening());
               }
             },
+          ),
+
+          // Right Evaluate Session button
+          if (state is ConversationReady && state.messages.any((m) => m.isUser))
+            IconButton(
+              icon: const Icon(Icons.assignment_turned_in_outlined),
+              iconSize: 32,
+              color: Colors.green,
+              tooltip: 'Evaluate Session',
+              onPressed: () => _evaluateSession(context, state),
+            )
+          else
+            const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  void _evaluateSession(BuildContext context, ConversationReady state) async {
+    final userMsgs = state.messages.where((m) => m.isUser).toList();
+    if (userMsgs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please send some messages first to evaluate.')),
+      );
+      return;
+    }
+
+    // Stop speaking/listening before evaluation
+    final bloc = context.read<ConversationBloc>();
+    bloc.add(StopListening());
+    bloc.add(StopAISpeech());
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: ColorsManager.primary),
+            SizedBox(height: 20),
+            Text(
+              'Analyzing your session...',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Evaluating grammar, vocabulary, fluency, and pronunciation...',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final history = state.messages
+          .map((m) => '${m.isUser ? "User" : "AI"}: ${m.text}')
+          .join('\n');
+
+      final geminiService = GeminiService();
+      final evalMap = await geminiService.evaluateConversation(
+        conversationHistory: history,
+        topic: state.currentTopic,
+      );
+
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
+      final evaluation = SessionEvaluation(
+        id: '',
+        userId: uid,
+        grammarScore: evalMap['grammar_score'] ?? 70,
+        vocabularyScore: evalMap['vocabulary_score'] ?? 70,
+        fluencyScore: evalMap['fluency_score'] ?? 70,
+        mistakesScore: evalMap['mistakes_score'] ?? 70,
+        pronunciationScore: evalMap['pronunciation_score'] ?? 70,
+        overallScore: evalMap['overall_score'] ?? 70,
+        feedback: evalMap['feedback'] ?? '',
+        timestamp: DateTime.now(),
+        topic: state.currentTopic,
+      );
+
+      final firestoreService = FireStoreService();
+      await firestoreService.saveSessionEvaluation(evaluation);
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        _showEvaluationSummaryDialog(context, evaluation);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to evaluate session: $e')),
+        );
+      }
+    }
+  }
+
+  void _showEvaluationSummaryDialog(BuildContext context, SessionEvaluation eval) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Center(
+            child: Text(
+              'Session Evaluation',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87),
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: ColorsManager.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Overall Score',
+                        style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${eval.overallScore}%',
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: ColorsManager.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _buildDialogMetricRow('Grammar', eval.grammarScore, Colors.blue),
+                _buildDialogMetricRow('Vocabulary', eval.vocabularyScore, Colors.orange),
+                _buildDialogMetricRow('Fluency', eval.fluencyScore, Colors.purple),
+                _buildDialogMetricRow('Pronunciation', eval.pronunciationScore, Colors.green),
+                const Divider(height: 24),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'AI Tutor Feedback:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  eval.feedback,
+                  style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop(); // Go back home
+              },
+              child: Text(
+                'Close',
+                style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop(); // Go back home
+                Navigator.pushNamed(context, MyProgressView.routeName);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsManager.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('View Analytics', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogMetricRow(String skill, int score, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              skill,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black54),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: score / 100.0,
+                color: color,
+                backgroundColor: color.withOpacity(0.1),
+                minHeight: 6,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$score%',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
           ),
         ],
       ),

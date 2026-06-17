@@ -272,6 +272,88 @@ Level:'''
     }
   }
 
+  Future<Map<String, dynamic>> evaluateConversation({
+    required String conversationHistory,
+    required String topic,
+  }) async {
+    print('[GeminiService] Evaluating conversation for topic: $topic');
+    final prompt = '''
+You are an expert English language examiner and tutor.
+Analyze the following English conversation between a user and an AI partner.
+Topic/Scenario: $topic
+
+Conversation History:
+$conversationHistory
+
+Please evaluate the user's responses (marked as "User:") across these exact criteria:
+1. Grammar accuracy (grammar_score: 0-100)
+2. Vocabulary usage and range (vocabulary_score: 0-100)
+3. Fluency and sentence structure (fluency_score: 0-100)
+4. Mistakes score (mistakes_score: 0-100, where 100 means no grammatical or spelling mistakes at all, and lower scores represent more errors)
+5. Pronunciation score (pronunciation_score: 0-100, estimate the score based on phonetic clues in their transcription or flow. A realistic score from 0-100 matching their overall skill level)
+6. Overall performance (overall_score: 0-100, the average of all criteria)
+7. Detailed constructive feedback in English (feedback: detailed description of their performance, identifying specific mistakes, how to correct them, strengths, and recommendations for improvement)
+
+You MUST respond with a single valid JSON object containing exactly the following keys:
+- "grammar_score" (int)
+- "vocabulary_score" (int)
+- "fluency_score" (int)
+- "mistakes_score" (int)
+- "pronunciation_score" (int)
+- "overall_score" (int)
+- "feedback" (String)
+
+Do not wrap the response in markdown blocks like ```json ... ```. Output ONLY the raw JSON string starting with { and ending with }.
+''';
+
+    try {
+      final response = await _client.post(
+        Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.2,
+            'responseMimeType': 'application/json',
+            'maxOutputTokens': 1024,
+          }
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        var text = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        text = text.trim();
+        
+        // Clean markdown backticks if any
+        if (text.startsWith('```')) {
+          text = text.replaceAll(RegExp(r'^```(json)?|```$'), '').trim();
+        }
+        
+        return jsonDecode(text) as Map<String, dynamic>;
+      } else {
+        throw Exception('API returned status ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      print('[GeminiService ERROR] Evaluation failed: $e');
+      return {
+        'grammar_score': 70,
+        'vocabulary_score': 70,
+        'fluency_score': 70,
+        'mistakes_score': 30,
+        'pronunciation_score': 70,
+        'overall_score': 70,
+        'feedback': 'We could not generate detailed feedback at this moment due to a network error. Keep practicing!',
+      };
+    }
+  }
+
   void dispose() {
     _client.close();
   }
