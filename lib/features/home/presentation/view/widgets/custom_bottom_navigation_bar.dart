@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:graduation_app/core/utils/app_colors.dart';
-import 'package:graduation_app/features/home/presentation/view/widgets/custom_scenario_bottom_sheet.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   const CustomBottomNavigationBar(
@@ -36,8 +35,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             children: [
               _buildNavItem(0, 'Home', Icons.home_outlined, Icons.home),
               _buildNavItem(1, 'Writing', Icons.edit_note, Icons.edit_note),
-              _buildPlusButton(context),
-              _buildNavItem(3, 'Chat', Icons.chat_bubble_outline, Icons.chat_bubble),
+              _buildNavItem(2, 'Chat', Icons.chat_bubble_outline, Icons.chat_bubble),
             ],
           ),
         ),
@@ -81,32 +79,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
               ],
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlusButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => CustomScenarioBottomSheet.show(context),
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppColors.primaryColor,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryColor.withOpacity(0.4),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 28,
         ),
       ),
     );

@@ -25,7 +25,6 @@ class MainViewBody extends StatelessWidget {
           ),
           child: const WritingPracticeScreen(),
         ),
-        const SizedBox.shrink(), // Placeholder for Plus button index if needed, but plus button usually shows bottom sheet
         const ChatPracticeView(),
       ],
     );
