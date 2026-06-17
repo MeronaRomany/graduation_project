@@ -123,6 +123,8 @@ class ConversationReady extends ConversationState {
   final List<ConversationMessage> messages;
   final bool isListening;
   final bool isAISpeaking;
+  final bool isProcessing;
+  final bool isGeneratingAudio;
 
   const ConversationReady({
     this.userLevel = 'intermediate',
@@ -130,6 +132,8 @@ class ConversationReady extends ConversationState {
     this.messages = const [],
     this.isListening = false,
     this.isAISpeaking = false,
+    this.isProcessing = false,
+    this.isGeneratingAudio = false,
   });
 
   ConversationReady copyWith({
@@ -138,6 +142,8 @@ class ConversationReady extends ConversationState {
     List<ConversationMessage>? messages,
     bool? isListening,
     bool? isAISpeaking,
+    bool? isProcessing,
+    bool? isGeneratingAudio,
   }) {
     return ConversationReady(
       userLevel: userLevel ?? this.userLevel,
@@ -145,6 +151,8 @@ class ConversationReady extends ConversationState {
       messages: messages ?? this.messages,
       isListening: isListening ?? this.isListening,
       isAISpeaking: isAISpeaking ?? this.isAISpeaking,
+      isProcessing: isProcessing ?? this.isProcessing,
+      isGeneratingAudio: isGeneratingAudio ?? this.isGeneratingAudio,
     );
   }
 
@@ -155,6 +163,8 @@ class ConversationReady extends ConversationState {
     messages,
     isListening,
     isAISpeaking,
+    isProcessing,
+    isGeneratingAudio,
   ];
 }
 
@@ -233,10 +243,21 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
     String topic = event.scenarioName;
 
+    RolePlayScenario? scenario;
+    try {
+      scenario = rolePlayScenarios.firstWhere(
+            (s) => s.id == topic,
+      );
+    } catch (_) {}
+
+    final String initialText = scenario != null 
+        ? scenario.starterMessage 
+        : _greeting;
+
+    _conversationHistory = "AI: $initialText";
+
     final message = ConversationMessage(
-      text: topic == 'general'
-          ? _greeting
-          : "Let's start roleplay: $topic",
+      text: initialText,
       isUser: false,
       timestamp: DateTime.now(),
     );
@@ -246,6 +267,8 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       messages: [message],
       userLevel: _currentUserLevel,
     ));
+
+    add(SpeakAIResponse(initialText));
   }
 
 
@@ -311,6 +334,8 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       final state = this.state;
       if (state is! ConversationReady) return;
 
+      emit(state.copyWith(isProcessing: true));
+
       _conversationHistory += "\nUser: ${event.message}";
 
       RolePlayScenario scenario;
@@ -353,10 +378,17 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       if (newState is ConversationReady) {
         emit(newState.copyWith(
           messages: [...newState.messages, aiMsg],
+          isProcessing: false,
         ));
       }
 
       add(SpeakAIResponse(response));
+    } catch (e) {
+      final newState = this.state;
+      if (newState is ConversationReady) {
+        emit(newState.copyWith(isProcessing: false));
+      }
+      add(_ServiceError(e.toString()));
     } finally {
       _isProcessing = false;
     }
@@ -367,6 +399,10 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       SpeakAIResponse event,
       Emitter<ConversationState> emit,
       ) async {
+    final state = this.state;
+    if (state is ConversationReady) {
+      emit(state.copyWith(isGeneratingAudio: true));
+    }
     await _ttsService.speak(event.text);
   }
 
@@ -385,7 +421,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
     final state = this.state;
     if (state is ConversationReady) {
-      emit(state.copyWith(isAISpeaking: false));
+      emit(state.copyWith(isAISpeaking: false, isGeneratingAudio: false));
     }
   }
 
@@ -395,7 +431,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       ) async {
     final state = this.state;
     if (state is ConversationReady) {
-      emit(state.copyWith(isAISpeaking: true));
+      emit(state.copyWith(isAISpeaking: true, isGeneratingAudio: false));
     }
   }
 
@@ -405,7 +441,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       ) async {
     final state = this.state;
     if (state is ConversationReady) {
-      emit(state.copyWith(isAISpeaking: false));
+      emit(state.copyWith(isAISpeaking: false, isGeneratingAudio: false));
     }
   }
 
@@ -413,18 +449,40 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       ResetConversation event,
       Emitter<ConversationState> emit,
       ) async {
-    _conversationHistory = '';
     _currentUserLevel = 'intermediate';
 
+    final currentState = this.state;
+    String topic = 'general';
+    if (currentState is ConversationReady) {
+      topic = currentState.currentTopic;
+    }
+
+    RolePlayScenario? scenario;
+    try {
+      scenario = rolePlayScenarios.firstWhere(
+            (s) => s.id == topic,
+      );
+    } catch (_) {}
+
+    final String initialText = scenario != null 
+        ? scenario.starterMessage 
+        : _greeting;
+
+    _conversationHistory = "AI: $initialText";
+
     emit(ConversationReady(
+      currentTopic: topic,
       messages: [
         ConversationMessage(
-          text: _greeting,
+          text: initialText,
           isUser: false,
           timestamp: DateTime.now(),
         )
       ],
+      userLevel: _currentUserLevel,
     ));
+
+    add(SpeakAIResponse(initialText));
   }
 
   Future<void> _onUpdateLevel(
