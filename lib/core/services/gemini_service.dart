@@ -6,13 +6,34 @@ import '../role_play_prompts.dart';
 import '../../features/home/data/models/role_play_scenario.dart';
 
 class GeminiService {
-  static const String _baseUrl =
+  static const String _primaryBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+  static const String _fallbackBaseUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   // API key is loaded from config file
 
   final http.Client _client;
 
   GeminiService({http.Client? client}) : _client = client ?? http.Client();
+
+  Future<http.Response> _postWithFallback(Map<String, dynamic> bodyMap) async {
+    http.Response response = await _client.post(
+      Uri.parse('$_primaryBaseUrl?key=${APIConfig.geminiApiKey}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(bodyMap),
+    );
+
+    // Fallback if the primary model is experiencing high demand (503) or rate limits (429)
+    if (response.statusCode == 503 || response.statusCode == 429) {
+      print('[GeminiService] Primary model failed with status ${response.statusCode}, falling back to 2.5-flash...');
+      response = await _client.post(
+        Uri.parse('$_fallbackBaseUrl?key=${APIConfig.geminiApiKey}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(bodyMap),
+      );
+    }
+    return response;
+  }
 
   Future<String> generateResponse({
     required String userMessage,
@@ -48,27 +69,21 @@ class GeminiService {
       http.Response response;
       try {
         print('[GeminiService] Making API request...');
-        response = await _client.post(
-          Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {'text': prompt}
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': 0.8,
-              'topK': 40,
-              'topP': 0.95,
-              'maxOutputTokens': 1024,
+        response = await _postWithFallback({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
             }
-          }),
-        );
+          ],
+          'generationConfig': {
+            'temperature': 0.8,
+            'topK': 40,
+            'topP': 0.95,
+            'maxOutputTokens': 1024,
+          }
+        });
         print('[GeminiService] API response received: ${response.statusCode}');
       } catch (e, stackTrace) {
         print('[GeminiService ERROR] API request failed: $e');
@@ -195,17 +210,12 @@ AI RESPONSE:''';
     try {
       http.Response response;
       try {
-        response = await _client.post(
-          Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {
-                    'text': '''
+        response = await _postWithFallback({
+          'contents': [
+            {
+              'parts': [
+                {
+                  'text': '''
 Analyze this English text sample and determine the user's proficiency level. Consider vocabulary, grammar, sentence structure, and overall fluency.
 
 Text: "$sampleText"
@@ -219,16 +229,15 @@ Choose the most appropriate level based on:
 - Overall fluency indicators
 
 Level:'''
-                  }
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': 0.3,
-              'maxOutputTokens': 50,
+                }
+              ]
             }
-          }),
-        );
+          ],
+          'generationConfig': {
+            'temperature': 0.3,
+            'maxOutputTokens': 50,
+          }
+        });
       } catch (e, stackTrace) {
         print('[GeminiService ERROR] Level assessment request failed: $e');
         print('[GeminiService ERROR] Stack trace: $stackTrace');
@@ -307,24 +316,20 @@ Do not wrap the response in markdown blocks like ```json ... ```. Output ONLY th
 ''';
 
     try {
-      final response = await _client.post(
-        Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt}
-              ]
-            }
-          ],
-          'generationConfig': {
-            'temperature': 0.2,
-            'responseMimeType': 'application/json',
-            'maxOutputTokens': 1024,
+      final response = await _postWithFallback({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt}
+            ]
           }
-        }),
-      );
+        ],
+        'generationConfig': {
+          'temperature': 0.2,
+          'responseMimeType': 'application/json',
+          'maxOutputTokens': 1024,
+        }
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -382,24 +387,20 @@ Do not wrap the response in markdown blocks like ```json ... ```. Output ONLY th
 ''';
 
     try {
-      final response = await _client.post(
-        Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt}
-              ]
-            }
-          ],
-          'generationConfig': {
-            'temperature': 0.2,
-            'responseMimeType': 'application/json',
-            'maxOutputTokens': 1024,
+      final response = await _postWithFallback({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt}
+            ]
           }
-        }),
-      );
+        ],
+        'generationConfig': {
+          'temperature': 0.2,
+          'responseMimeType': 'application/json',
+          'maxOutputTokens': 1024,
+        }
+      });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
