@@ -86,7 +86,6 @@ class WhisperOnnxService extends OnnxService {
 
       final power = _fftPowerSpectrum(windowed);
 
-      // Mel filterbank + log
       for (int m = 0; m < _nMels; m++) {
         double energy = 0.0;
         final fb = filterbank[m];
