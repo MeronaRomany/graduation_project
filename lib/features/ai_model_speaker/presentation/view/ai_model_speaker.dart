@@ -336,15 +336,64 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
             : ListView.builder(
           controller: _scrollController,
           padding: const EdgeInsets.all(20),
-          itemCount: state.messages.length,
+          itemCount: state.messages.length + ((state.isProcessing || state.isGeneratingAudio) ? 1 : 0),
           itemBuilder: (context, index) {
-            return _buildMessageBubble(state.messages[index], state);
+            if (index == state.messages.length) {
+              return _buildTypingIndicator(state.isGeneratingAudio);
+            }
+            return _buildMessageBubble(state.messages[index], state, isLast: index == state.messages.length - 1);
           },
         ),
       );
     }
 
     return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget _buildTypingIndicator(bool isGeneratingAudio) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              ),
+            ),
+            child: const Icon(Icons.person, size: 16, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF667eea)),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isGeneratingAudio ? 'Generating Audio...' : 'Thinking...', 
+                  style: const TextStyle(color: Colors.black54, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildErrorWidget(String errorMessage) {
@@ -403,7 +452,7 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
     }
   }
 
-  Widget _buildMessageBubble(ConversationMessage message, ConversationReady state) {
+  Widget _buildMessageBubble(ConversationMessage message, ConversationReady state, {bool isLast = false}) {
     final isUser = message.isUser;
 
     return Container(
@@ -437,14 +486,23 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: isUser ? Colors.white : Colors.black87,
-                      fontSize: 16,
-                      height: 1.4,
-                    ),
-                  ),
+                  isLast && !isUser && state.isAISpeaking
+                      ? TypewriterText(
+                          text: message.text,
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 16,
+                            height: 1.4,
+                          ),
+                        )
+                      : Text(
+                          message.text,
+                          style: TextStyle(
+                            color: isUser ? Colors.white : Colors.black87,
+                            fontSize: 16,
+                            height: 1.4,
+                          ),
+                        ),
                   if (message.level != null && isUser) ...[
                     const SizedBox(height: 4),
                     Container(
@@ -489,6 +547,9 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
     if (state is ConversationError) return const SizedBox.shrink();
 
     final isListening = state is ConversationReady ? state.isListening : false;
+    final isProcessing = state is ConversationReady ? state.isProcessing : false;
+    final isGeneratingAudio = state is ConversationReady ? state.isGeneratingAudio : false;
+    final isBusy = isProcessing || isGeneratingAudio;
     final bloc = context.read<ConversationBloc>();
 
     return Container(
@@ -508,34 +569,98 @@ class _AIModelSpeakerViewState extends State<AIModelSpeakerView>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left placeholder to keep layout balanced
-          const SizedBox(width: 48),
+          // Left placeholder or status text
+          Expanded(
+            child: Text(
+              isGeneratingAudio
+                  ? "Generating Audio..."
+                  : isProcessing
+                      ? "Processing..."
+                      : isListening
+                          ? "Listening..."
+                          : "Tap to Speak",
+              style: TextStyle(
+                color: isBusy ? Colors.grey : (isListening ? Colors.red : const Color(0xFF667eea)),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
 
           // Center Mic button
-          IconButton(
-            icon: Icon(isListening ? Icons.stop : Icons.mic),
-            iconSize: 40,
-            color: isListening ? Colors.red : const Color(0xFF667eea),
-            onPressed: () {
+          GestureDetector(
+            onTap: isBusy ? null : () {
               if (isListening) {
                 bloc.add(StopListening());
               } else {
                 bloc.add(StartListening());
               }
             },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isBusy ? Colors.grey.shade300 : (isListening ? Colors.red.withOpacity(0.1) : const Color(0xFF667eea).withOpacity(0.1)),
+                border: Border.all(
+                  color: isBusy ? Colors.grey : (isListening ? Colors.red : const Color(0xFF667eea)),
+                  width: 2,
+                ),
+              ),
+              child: isBusy
+                  ? const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(strokeWidth: 3),
+                    )
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (isListening)
+                          AnimatedBuilder(
+                            animation: _waveController,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: 1.0 + (_waveController.value * 0.5),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.red.withOpacity(1.0 - _waveController.value),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        Icon(
+                          isListening ? Icons.stop : Icons.mic,
+                          size: 40,
+                          color: isProcessing ? Colors.grey : (isListening ? Colors.red : const Color(0xFF667eea)),
+                        ),
+                      ],
+                    ),
+            ),
           ),
 
-          // Right Evaluate Session button
-          if (state is ConversationReady && state.messages.any((m) => m.isUser))
-            IconButton(
-              icon: const Icon(Icons.assignment_turned_in_outlined),
-              iconSize: 32,
-              color: Colors.green,
-              tooltip: 'Evaluate Session',
-              onPressed: () => _evaluateSession(context, state),
-            )
-          else
-            const SizedBox(width: 48),
+          // Right Finish button
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: (state is ConversationReady && state.messages.any((m) => m.isUser))
+                  ? ElevatedButton.icon(
+                      icon: const Icon(Icons.assignment_turned_in_outlined, size: 20),
+                      label: const Text('Finish'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onPressed: () => _evaluateSession(context, state),
+                    )
+                  : const SizedBox(),
+            ),
+          ),
         ],
       ),
     );
@@ -756,4 +881,62 @@ class BackgroundPatternPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {}
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class TypewriterText extends StatefulWidget {
+  final String text;
+  final TextStyle? style;
+
+  const TypewriterText({
+    super.key,
+    required this.text,
+    this.style,
+  });
+
+  @override
+  State<TypewriterText> createState() => _TypewriterTextState();
+}
+
+class _TypewriterTextState extends State<TypewriterText> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<int> _characterCount;
+
+  @override
+  void initState() {
+    super.initState();
+    // Assuming around 15-20 characters per second for TTS speech rate
+    _controller = AnimationController(
+      duration: Duration(milliseconds: widget.text.length * 50),
+      vsync: this,
+    );
+    _characterCount = StepTween(begin: 0, end: widget.text.length).animate(_controller);
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(TypewriterText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _controller.duration = Duration(milliseconds: widget.text.length * 50);
+      _characterCount = StepTween(begin: 0, end: widget.text.length).animate(_controller);
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _characterCount,
+      builder: (context, child) {
+        String visibleString = widget.text.substring(0, _characterCount.value);
+        return Text(visibleString, style: widget.style);
+      },
+    );
+  }
 }
