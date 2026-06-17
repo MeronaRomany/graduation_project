@@ -7,7 +7,9 @@ import '../../../home/data/role_play_scenarios.dart';
 class WritingPracticeCubit extends Cubit<WritingPracticeState> {
   final WritingPracticeRepository _repository;
 
-  WritingPracticeCubit(this._repository) : super(WritingPracticeInitial());
+  WritingPracticeCubit(this._repository) : super(WritingPracticeInitial()) {
+    loadScenarios();
+  }
 
   void loadScenarios() {
     // In a real app, user level might come from a ProfileCubit

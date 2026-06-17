@@ -376,7 +376,7 @@ You MUST respond with a single valid JSON object containing exactly the followin
 - "vocabularyScore" (int: 0-100)
 - "fluencyScore" (int: 0-100)
 - "improvementSuggestions" (List of Strings: 3-5 specific suggestions for improvement)
-- "mistakes" (List of objects, each with "original" (String), "correction" (String), and "explanation" (String))
+- "mistakes" (List of objects, each with "wrong" (String), "correct" (String), and "reason" (String))
 
 Do not wrap the response in markdown blocks like ```json ... ```. Output ONLY the raw JSON string starting with { and ending with }.
 ''';

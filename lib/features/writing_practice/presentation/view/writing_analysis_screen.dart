@@ -27,13 +27,13 @@ class WritingAnalysisScreen extends StatelessWidget {
             _buildCorrectedTextSection(),
             const SizedBox(height: 24),
             if (analysis.mistakes.isNotEmpty) ...[
-              Text('Mistakes & Corrections', style: AppTextStyles.bold19),
+              Text('Mistakes & Corrections', style: AppTextStyles.bold19.copyWith(color: Colors.black)),
               const SizedBox(height: 12),
               ...analysis.mistakes.map((m) => _buildMistakeCard(m)),
               const SizedBox(height: 24),
             ],
             if (analysis.improvementSuggestions.isNotEmpty) ...[
-              Text('How to Improve', style: AppTextStyles.bold19),
+              Text('How to Improve', style: AppTextStyles.bold19.copyWith(color: Colors.black)),
               const SizedBox(height: 12),
               _buildSuggestionsCard(),
             ],
@@ -134,7 +134,7 @@ class WritingAnalysisScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             analysis.correctedText,
-            style: const TextStyle(fontSize: 16, height: 1.5, fontStyle: FontStyle.italic),
+            style: const TextStyle(fontSize: 16, height: 1.5, fontStyle: FontStyle.italic, color: Colors.black),
           ),
         ],
       ),
@@ -161,7 +161,7 @@ class WritingAnalysisScreen extends StatelessWidget {
                 child: Text(
                   mistake.wrong,
                   style: const TextStyle(
-                    color: Colors.red,
+                    color: Colors.black,
                     decoration: TextDecoration.lineThrough,
                     fontSize: 15,
                   ),
@@ -178,7 +178,7 @@ class WritingAnalysisScreen extends StatelessWidget {
                 child: Text(
                   mistake.correct,
                   style: const TextStyle(
-                    color: Colors.green,
+                    color: Colors.black,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -189,7 +189,7 @@ class WritingAnalysisScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             mistake.reason,
-            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            style: const TextStyle(color: Colors.black87, fontSize: 13),
           ),
         ],
       ),
@@ -218,7 +218,7 @@ class WritingAnalysisScreen extends StatelessWidget {
                 Expanded(
                   child: Text(
                     suggestion,
-                    style: const TextStyle(fontSize: 14, height: 1.4),
+                    style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
                   ),
                 ),
               ],
