@@ -5,6 +5,7 @@ import 'package:graduation_app/services/user_storage_services.dart';
 
 import '../models/user_model_auth.dart';
 import '../models/session_evaluation_model.dart';
+import '../models/learning_session_model.dart';
 class FireStoreService{
   final UserStorageService _userStorageService = UserStorageService();
 
@@ -129,5 +130,17 @@ class FireStoreService{
     return querySnapshot.docs.map((doc) {
       return SessionEvaluation.fromMap(doc.data(), doc.id);
     }).toList();
+  }
+
+  Stream<List<LearningSession>> streamLearningSessions(String uid) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('learning_sessions')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              return LearningSession.fromMap(doc.data(), doc.id);
+            }).toList());
   }
 }

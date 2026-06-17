@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:graduation_app/core/theme/colors_manager.dart';
+
 import 'package:graduation_app/core/utils/app_text_styles.dart';
 
 class SkillComparisonCard extends StatelessWidget {

@@ -354,6 +354,80 @@ Do not wrap the response in markdown blocks like ```json ... ```. Output ONLY th
     }
   }
 
+  Future<String> analyzeWriting({
+    required String text,
+    required String scenarioTitle,
+    required String userLevel,
+  }) async {
+    print('[GeminiService] Analyzing writing for scenario: $scenarioTitle');
+    final prompt = '''
+You are an expert English language examiner and tutor.
+Analyze the following English text written by a user at the "$userLevel" level.
+Scenario/Topic: $scenarioTitle
+
+User's Text:
+"$text"
+
+Please evaluate the user's text and provide a detailed analysis.
+You MUST respond with a single valid JSON object containing exactly the following keys:
+- "correctedText" (String: The text with all grammatical and spelling mistakes corrected)
+- "overallScore" (int: 0-100)
+- "grammarScore" (int: 0-100)
+- "vocabularyScore" (int: 0-100)
+- "fluencyScore" (int: 0-100)
+- "improvementSuggestions" (List of Strings: 3-5 specific suggestions for improvement)
+- "mistakes" (List of objects, each with "original" (String), "correction" (String), and "explanation" (String))
+
+Do not wrap the response in markdown blocks like ```json ... ```. Output ONLY the raw JSON string starting with { and ending with }.
+''';
+
+    try {
+      final response = await _client.post(
+        Uri.parse('$_baseUrl?key=${APIConfig.geminiApiKey}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.2,
+            'responseMimeType': 'application/json',
+            'maxOutputTokens': 1024,
+          }
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        var responseText = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        responseText = responseText.trim();
+        
+        if (responseText.startsWith('```')) {
+          responseText = responseText.replaceAll(RegExp(r'^```(json)?|```$'), '').trim();
+        }
+        
+        return responseText;
+      } else {
+        throw Exception('API returned status ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      print('[GeminiService ERROR] Analysis failed: $e');
+      return jsonEncode({
+        'correctedText': text,
+        'overallScore': 70,
+        'grammarScore': 70,
+        'vocabularyScore': 70,
+        'fluencyScore': 70,
+        'improvementSuggestions': ['We could not generate detailed feedback at this moment due to a network error. Keep practicing!'],
+        'mistakes': [],
+      });
+    }
+  }
+
   void dispose() {
     _client.close();
   }
