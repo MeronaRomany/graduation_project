@@ -2,6 +2,15 @@ import 'package:equatable/equatable.dart';
 import '../../data/models/writing_analysis_model.dart';
 import '../../../home/data/models/role_play_scenario.dart';
 
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  ChatMessage({required this.text, required this.isUser, DateTime? timestamp})
+      : timestamp = timestamp ?? DateTime.now();
+}
+
 abstract class WritingPracticeState extends Equatable {
   const WritingPracticeState();
 
@@ -16,32 +25,36 @@ class WritingPracticeLoading extends WritingPracticeState {}
 class WritingPracticeLoaded extends WritingPracticeState {
   final List<RolePlayScenario> scenarios;
   final RolePlayScenario? selectedScenario;
-  final String? selectedTask;
+  final List<ChatMessage> messages;
   final String userLevel;
+  final bool isSendingMessage;
 
   const WritingPracticeLoaded({
     required this.scenarios,
     this.selectedScenario,
-    this.selectedTask,
+    this.messages = const [],
     required this.userLevel,
+    this.isSendingMessage = false,
   });
 
   WritingPracticeLoaded copyWith({
     List<RolePlayScenario>? scenarios,
     RolePlayScenario? selectedScenario,
-    String? selectedTask,
+    List<ChatMessage>? messages,
     String? userLevel,
+    bool? isSendingMessage,
   }) {
     return WritingPracticeLoaded(
       scenarios: scenarios ?? this.scenarios,
       selectedScenario: selectedScenario ?? this.selectedScenario,
-      selectedTask: selectedTask ?? this.selectedTask,
+      messages: messages ?? this.messages,
       userLevel: userLevel ?? this.userLevel,
+      isSendingMessage: isSendingMessage ?? this.isSendingMessage,
     );
   }
 
   @override
-  List<Object?> get props => [scenarios, selectedScenario, selectedTask, userLevel];
+  List<Object?> get props => [scenarios, selectedScenario, messages, userLevel, isSendingMessage];
 }
 
 class WritingAnalysisSuccess extends WritingPracticeState {

@@ -9,6 +9,11 @@ import 'package:graduation_app/features/profile/presentation/view/help_support_v
 import 'package:graduation_app/features/profile/presentation/view/my_progress_view.dart';
 import 'package:graduation_app/features/profile/presentation/view/profile_view.dart';
 import 'package:graduation_app/features/profile/presentation/view/settings_view.dart';
+import 'package:graduation_app/features/writing_practice/data/repos/writing_practice_repo_impl.dart';
+import 'package:graduation_app/features/writing_practice/presentation/cubit/writing_practice_cubit.dart';
+import 'package:graduation_app/features/writing_practice/presentation/view/writing_practice_screen.dart';
+import 'package:graduation_app/services/firestore_service.dart';
+import '../core/services/gemini_service.dart';
 import '../features/Auth/forget_password.dart';
 import '../features/Auth/sign_in_page.dart';
 import '../features/Auth/sign_up_page.dart';
@@ -17,6 +22,7 @@ import '../features/home/presentation/view/home_view.dart';
 
 class AppRouter {
   static const String aiSpeaker = '/ai-speaker';
+  static const String writingPractice = '/writing-practice';
 
   static Route? generateRoute(RouteSettings setting) {
     switch (setting.name) {
@@ -54,6 +60,16 @@ class AppRouter {
         }
         return MaterialPageRoute(
           builder: (_) => AIModelSpeakerScreen(scenario: scenario),
+        );
+      case writingPractice:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => WritingPracticeCubit(
+              WritingPracticeRepositoryImpl(GeminiService()),
+              FireStoreService(),
+            ),
+            child: const WritingPracticeScreen(),
+          ),
         );
       case ProfileView.routeName:
         return MaterialPageRoute(builder: (_) => const ProfileView());

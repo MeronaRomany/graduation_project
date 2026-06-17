@@ -37,6 +37,7 @@ class RolePlayScenario {
   final CefrLevel cefrLevel;
   final List<String> suggestedVocabulary;
   final List<String> commonPhrases;
+  final Map<DifficultyLevel, List<String>> writingTasks;
 
   const RolePlayScenario({
     required this.id,
@@ -50,6 +51,7 @@ class RolePlayScenario {
     required this.cefrLevel,
     this.suggestedVocabulary = const [],
     this.commonPhrases = const [],
+    this.writingTasks = const {},
   });
 
   String get difficultyLabel {

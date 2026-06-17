@@ -11,35 +11,40 @@ class WritingAnalysisScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('Writing Analysis'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildScoreSection(),
-            const SizedBox(height: 24),
-            _buildCorrectedTextSection(),
-            const SizedBox(height: 24),
-            if (analysis.mistakes.isNotEmpty) ...[
-              Text('Mistakes & Corrections', style: AppTextStyles.bold19),
-              const SizedBox(height: 12),
-              ...analysis.mistakes.map((m) => _buildMistakeCard(m)),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Writing Analysis'),
+          centerTitle: true,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildScoreSection(),
               const SizedBox(height: 24),
+              _buildCorrectedTextSection(),
+              const SizedBox(height: 24),
+              if (analysis.mistakes.isNotEmpty) ...[
+                Text('Mistakes & Corrections',
+                    style: AppTextStyles.bold19, textAlign: TextAlign.right),
+                const SizedBox(height: 12),
+                ...analysis.mistakes.map((m) => _buildMistakeCard(m)),
+                const SizedBox(height: 24),
+              ],
+              if (analysis.improvementSuggestions.isNotEmpty) ...[
+                Text('How to Improve',
+                    style: AppTextStyles.bold19, textAlign: TextAlign.right),
+                const SizedBox(height: 12),
+                _buildSuggestionsCard(),
+              ],
+              const SizedBox(height: 32),
+              _buildDoneButton(context),
             ],
-            if (analysis.improvementSuggestions.isNotEmpty) ...[
-              Text('How to Improve', style: AppTextStyles.bold19),
-              const SizedBox(height: 12),
-              _buildSuggestionsCard(),
-            ],
-            const SizedBox(height: 32),
-            _buildDoneButton(context),
-          ],
+          ),
         ),
       ),
     );
@@ -50,9 +55,12 @@ class WritingAnalysisScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [ColorsManager.primary, ColorsManager.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [
+            ColorsManager.primary,
+            ColorsManager.primary.withOpacity(0.8)
+          ],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -128,13 +136,22 @@ class WritingAnalysisScreen extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle, color: Colors.green),
               const SizedBox(width: 8),
-              Text('Corrected Text', style: AppTextStyles.bold16.copyWith(color: Colors.green)),
+              Text('Corrected Text',
+                  style: AppTextStyles.bold16.copyWith(color: Colors.green)),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            analysis.correctedText,
-            style: const TextStyle(fontSize: 16, height: 1.5, fontStyle: FontStyle.italic),
+          SizedBox(
+            width: double.infinity,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(
+                analysis.correctedText,
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                    fontSize: 16, height: 1.5, fontStyle: FontStyle.italic),
+              ),
+            ),
           ),
         ],
       ),
@@ -158,12 +175,16 @@ class WritingAnalysisScreen extends StatelessWidget {
               const Icon(Icons.error_outline, color: Colors.red, size: 20),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  mistake.wrong,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    decoration: TextDecoration.lineThrough,
-                    fontSize: 15,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    mistake.wrong,
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      decoration: TextDecoration.lineThrough,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
@@ -172,24 +193,33 @@ class WritingAnalysisScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+              const Icon(Icons.check_circle_outline,
+                  color: Colors.green, size: 20),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  mistake.correct,
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    mistake.correct,
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            mistake.reason,
-            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              mistake.reason,
+              textAlign: TextAlign.right,
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
           ),
         ],
       ),
@@ -213,11 +243,13 @@ class WritingAnalysisScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
+                const Icon(Icons.lightbulb_outline,
+                    color: Colors.amber, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     suggestion,
+                    textAlign: TextAlign.right,
                     style: const TextStyle(fontSize: 14, height: 1.4),
                   ),
                 ),
@@ -238,9 +270,11 @@ class WritingAnalysisScreen extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorsManager.primary,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-        child: const Text('Back to Lessons', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        child: const Text('Back to Lessons',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );
   }

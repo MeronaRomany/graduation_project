@@ -16,14 +16,16 @@ class _MainViewState extends State<MainView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          MainViewBody(currentIndex: currentIndex),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Align(
-              alignment: Alignment.bottomCenter,
+      // extendBody: true يسمح للمحتوى بالظهور خلف الـ Navbar العائم
+      extendBody: true,
+      body: MainViewBody(currentIndex: currentIndex),
+      bottomNavigationBar: isKeyboardVisible
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
               child: CustomBottomNavigationBar(
                 index: currentIndex,
                 onItemTapped: (index) {
@@ -33,9 +35,6 @@ class _MainViewState extends State<MainView> {
                 },
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }

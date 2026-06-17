@@ -7,7 +7,8 @@ import '../../../../core/services/speech_service.dart';
 import '../../../../core/services/tts_service.dart';
 import '../../../home/data/models/role_play_scenario.dart';
 import '../../../home/data/role_play_scenarios.dart';
-
+import '../../../../models/learning_session_model.dart';
+import '../../../../services/firestore_service.dart';
 
 abstract class ConversationEvent extends Equatable {
   const ConversationEvent();
@@ -52,13 +53,12 @@ class SpeakAIResponse extends ConversationEvent {
 }
 
 class StopAISpeech extends ConversationEvent {}
-
 class InterruptAI extends ConversationEvent {}
-
 class StartSpeaking extends ConversationEvent {}
 class StopSpeaking extends ConversationEvent {}
-
 class ResetConversation extends ConversationEvent {}
+
+class EvaluateConversation extends ConversationEvent {}
 
 class _ServiceError extends ConversationEvent {
   final String message;
@@ -88,8 +88,16 @@ abstract class ConversationState extends Equatable {
 }
 
 class ConversationInitial extends ConversationState {}
-
 class ConversationLoading extends ConversationState {}
+class ConversationEvaluating extends ConversationState {}
+
+class ConversationEvaluationSuccess extends ConversationState {
+  final Map<String, dynamic> evaluation;
+  const ConversationEvaluationSuccess(this.evaluation);
+
+  @override
+  List<Object?> get props => [evaluation];
+}
 
 class ConversationError extends ConversationState {
   final String message;
@@ -105,12 +113,11 @@ class ConversationMessage extends Equatable {
   final DateTime timestamp;
   final String? level;
 
-
   const ConversationMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
-     this.level
+    this.level,
   });
 
   @override
@@ -149,20 +156,14 @@ class ConversationReady extends ConversationState {
   }
 
   @override
-  List<Object?> get props => [
-    userLevel,
-    currentTopic,
-    messages,
-    isListening,
-    isAISpeaking,
-  ];
+  List<Object?> get props => [userLevel, currentTopic, messages, isListening, isAISpeaking];
 }
-
 
 class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   final GeminiService _geminiService;
   final SpeechService _speechService;
   final TTSService _ttsService;
+  final FireStoreService _fireStoreService = FireStoreService();
 
   Timer? _autoStopTimer;
   String _conversationHistory = '';
@@ -174,14 +175,9 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   late final StreamSubscription _ttsSub;
   late final StreamSubscription _ttsErrorSub;
 
-  static const String _greeting =
-      "Hello! I'm your English practice partner. What would you like to talk about today?";
+  static const String _greeting = "Hello! I'm your English practice partner. What would you like to talk about today?";
 
-  ConversationBloc(
-      this._geminiService,
-      this._speechService,
-      this._ttsService,
-      ) : super(ConversationInitial()) {
+  ConversationBloc(this._geminiService, this._speechService, this._ttsService) : super(ConversationInitial()) {
     on<InitializeConversation>(_onInit);
     on<StartListening>(_onStartListening);
     on<StopListening>(_onStopListening);
@@ -194,137 +190,76 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     on<StopSpeaking>(_onStopSpeaking);
     on<ResetConversation>(_onReset);
     on<UpdateUserLevel>(_onUpdateLevel);
+    on<EvaluateConversation>(_onEvaluate);
     on<_ServiceError>(_onError);
 
     _speechSub = _speechService.state.listen((state) {
-      if (state == SpeechState.completed) {
-        add(StopListening());
-      }
+      if (state == SpeechState.completed) add(StopListening());
     });
 
     _speechResultSub = _speechService.result.listen((text) {
-      if (text.trim().isNotEmpty) {
-        add(SpeechRecognized(text));
-      }
+      if (text.trim().isNotEmpty) add(SpeechRecognized(text));
     });
 
     _ttsSub = _ttsService.state.listen((state) {
-      if (state == TTSState.speaking) {
-        add(StartSpeaking());
-      } else {
-        add(StopSpeaking());
-      }
+      if (state == TTSState.speaking) add(StartSpeaking()); else add(StopSpeaking());
     });
 
-    _ttsErrorSub = _ttsService.error.listen((err) {
-      add(_ServiceError(err));
-    });
+    _ttsErrorSub = _ttsService.error.listen((err) => add(_ServiceError(err)));
   }
 
-
-  Future<void> _onInit(
-      InitializeConversation event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onInit(InitializeConversation event, Emitter<ConversationState> emit) async {
     emit(ConversationLoading());
-
     await _speechService.initialize();
     await _ttsService.initialize();
-
     String topic = event.scenarioName;
-
     final message = ConversationMessage(
-      text: topic == 'general'
-          ? _greeting
-          : "Let's start roleplay: $topic",
+      text: topic == 'general' ? _greeting : "Let's start roleplay: $topic",
       isUser: false,
       timestamp: DateTime.now(),
     );
-
-    emit(ConversationReady(
-      currentTopic: topic,
-      messages: [message],
-      userLevel: _currentUserLevel,
-    ));
+    emit(ConversationReady(currentTopic: topic, messages: [message], userLevel: _currentUserLevel));
   }
 
-
-  Future<void> _onStartListening(
-      StartListening event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onStartListening(StartListening event, Emitter<ConversationState> emit) async {
     final state = this.state;
     if (state is! ConversationReady) return;
-
     await _speechService.startListening();
-
     emit(state.copyWith(isListening: true));
-
     _autoStopTimer?.cancel();
-    _autoStopTimer = Timer(const Duration(seconds: 10), () {
-      add(StopListening());
-    });
+    _autoStopTimer = Timer(const Duration(seconds: 10), () => add(StopListening()));
   }
 
-  Future<void> _onStopListening(
-      StopListening event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onStopListening(StopListening event, Emitter<ConversationState> emit) async {
     _autoStopTimer?.cancel();
     await _speechService.stopListening();
-
     final state = this.state;
-    if (state is ConversationReady) {
-      emit(state.copyWith(isListening: false));
-    }
+    if (state is ConversationReady) emit(state.copyWith(isListening: false));
   }
 
-  Future<void> _onSpeechRecognized(
-      SpeechRecognized event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onSpeechRecognized(SpeechRecognized event, Emitter<ConversationState> emit) async {
     final state = this.state;
     if (state is! ConversationReady) return;
-
-    final userMsg = ConversationMessage(
-      text: event.text,
-      isUser: true,
-      timestamp: DateTime.now(),
-    );
-
-    emit(state.copyWith(
-      messages: [...state.messages, userMsg],
-    ));
-
+    final userMsg = ConversationMessage(text: event.text, isUser: true, timestamp: DateTime.now());
+    emit(state.copyWith(messages: [...state.messages, userMsg]));
     add(SendMessage(event.text));
   }
 
-
-  Future<void> _onSendMessage(
-      SendMessage event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onSendMessage(SendMessage event, Emitter<ConversationState> emit) async {
     if (_isProcessing) return;
     _isProcessing = true;
-
     try {
       final state = this.state;
       if (state is! ConversationReady) return;
-
       _conversationHistory += "\nUser: ${event.message}";
-
       RolePlayScenario scenario;
-
       try {
-        scenario = rolePlayScenarios.firstWhere(
-              (s) => s.id == state.currentTopic,
-        );
+        scenario = rolePlayScenarios.firstWhere((s) => s.id == state.currentTopic);
       } catch (_) {
         scenario = RolePlayScenario(
           id: 'custom',
           title: state.currentTopic,
-          systemPrompt:
-          "You are a roleplay partner for ${state.currentTopic}",
+          systemPrompt: "You are a roleplay partner for ${state.currentTopic}",
           description: "Custom scenario",
           emoji: "✨",
           starterMessage: "",
@@ -333,135 +268,93 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           cefrLevel: CefrLevel.a12,
         );
       }
-
       final response = await _geminiService.generateResponse(
         userMessage: event.message,
         conversationHistory: _conversationHistory,
         userLevel: _currentUserLevel,
         scenario: scenario,
       );
-
       _conversationHistory += "\nAI: $response";
-
-      final aiMsg = ConversationMessage(
-        text: response,
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
-
+      final aiMsg = ConversationMessage(text: response, isUser: false, timestamp: DateTime.now());
       final newState = this.state;
       if (newState is ConversationReady) {
-        emit(newState.copyWith(
-          messages: [...newState.messages, aiMsg],
-        ));
+        emit(newState.copyWith(messages: [...newState.messages, aiMsg]));
       }
-
       add(SpeakAIResponse(response));
     } finally {
       _isProcessing = false;
     }
   }
 
+  Future<void> _onEvaluate(EvaluateConversation event, Emitter<ConversationState> emit) async {
+    if (_conversationHistory.isEmpty) {
+      emit(const ConversationError("Not enough conversation to evaluate."));
+      return;
+    }
+    emit(ConversationEvaluating());
+    try {
+      final evaluation = await _geminiService.evaluateSession(
+        conversationHistory: _conversationHistory,
+        type: 'practice',
+      );
 
-  Future<void> _onSpeakAI(
-      SpeakAIResponse event,
-      Emitter<ConversationState> emit,
-      ) async {
-    await _ttsService.speak(event.text);
+      final user = await _fireStoreService.userModel;
+      final session = LearningSession(
+        userId: user.uid,
+        sessionType: SessionType.practice,
+        date: DateTime.now(),
+        grammarScore: evaluation['grammar_score'] ?? 0,
+        vocabularyScore: evaluation['vocabulary_score'] ?? 0,
+        fluencyScore: evaluation['fluency_score'] ?? 0,
+        overallScore: evaluation['overall_score'] ?? 0,
+        mistakesScore: evaluation['mistakes_score'] ?? 0,
+        pronunciationScore: evaluation['pronunciation_score'] ?? 0,
+        feedback: evaluation['feedback'] ?? '',
+      );
+      await _fireStoreService.saveLearningSession(session);
+
+      emit(ConversationEvaluationSuccess(evaluation));
+    } catch (e) {
+      emit(ConversationError(e.toString()));
+    }
   }
 
-  Future<void> _onStopSpeech(
-      StopAISpeech event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onSpeakAI(SpeakAIResponse event, Emitter<ConversationState> emit) async => await _ttsService.speak(event.text);
+  Future<void> _onStopSpeech(StopAISpeech event, Emitter<ConversationState> emit) async => await _ttsService.stop();
+  Future<void> _onInterrupt(InterruptAI event, Emitter<ConversationState> emit) async {
     await _ttsService.stop();
-  }
-
-  Future<void> _onInterrupt(
-      InterruptAI event,
-      Emitter<ConversationState> emit,
-      ) async {
-    await _ttsService.stop();
-
     final state = this.state;
-    if (state is ConversationReady) {
-      emit(state.copyWith(isAISpeaking: false));
-    }
+    if (state is ConversationReady) emit(state.copyWith(isAISpeaking: false));
   }
-
-  Future<void> _onStartSpeaking(
-      StartSpeaking event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onStartSpeaking(StartSpeaking event, Emitter<ConversationState> emit) async {
     final state = this.state;
-    if (state is ConversationReady) {
-      emit(state.copyWith(isAISpeaking: true));
-    }
+    if (state is ConversationReady) emit(state.copyWith(isAISpeaking: true));
   }
-
-  Future<void> _onStopSpeaking(
-      StopSpeaking event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onStopSpeaking(StopSpeaking event, Emitter<ConversationState> emit) async {
     final state = this.state;
-    if (state is ConversationReady) {
-      emit(state.copyWith(isAISpeaking: false));
-    }
+    if (state is ConversationReady) emit(state.copyWith(isAISpeaking: false));
   }
-
-  Future<void> _onReset(
-      ResetConversation event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onReset(ResetConversation event, Emitter<ConversationState> emit) async {
     _conversationHistory = '';
     _currentUserLevel = 'intermediate';
-
-    emit(ConversationReady(
-      messages: [
-        ConversationMessage(
-          text: _greeting,
-          isUser: false,
-          timestamp: DateTime.now(),
-        )
-      ],
-    ));
+    emit(ConversationReady(messages: [ConversationMessage(text: _greeting, isUser: false, timestamp: DateTime.now())]));
   }
-
-  Future<void> _onUpdateLevel(
-      UpdateUserLevel event,
-      Emitter<ConversationState> emit,
-      ) async {
+  Future<void> _onUpdateLevel(UpdateUserLevel event, Emitter<ConversationState> emit) async {
     _currentUserLevel = event.level;
-
     final state = this.state;
-    if (state is ConversationReady) {
-      emit(state.copyWith(userLevel: event.level));
-    }
+    if (state is ConversationReady) emit(state.copyWith(userLevel: event.level));
   }
-
-  // ───────────────────────────────
-  // ERROR
-  // ───────────────────────────────
-
-  Future<void> _onError(
-      _ServiceError event,
-      Emitter<ConversationState> emit,
-      ) async {
-    emit(ConversationError(event.message));
-  }
+  Future<void> _onError(_ServiceError event, Emitter<ConversationState> emit) async => emit(ConversationError(event.message));
 
   @override
   Future<void> close() async {
     _autoStopTimer?.cancel();
-
     await _speechSub.cancel();
     await _speechResultSub.cancel();
     await _ttsSub.cancel();
     await _ttsErrorSub.cancel();
-
     await _speechService.dispose();
     await _ttsService.dispose();
-
     return super.close();
   }
 }
