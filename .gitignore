@@ -49,3 +49,4 @@ lib/core/utils/secrets.dart
 
 # AI Models
 assets/models/
+.env
