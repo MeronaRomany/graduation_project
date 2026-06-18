@@ -7,72 +7,176 @@ This document provides a high-level overview of the application's ecosystem. It 
 This diagram illustrates the main connections between the user's device (the App) and the external services that power it.
 
 ```mermaid
-graph TD
-    %% Main Application
-    App((Mobile App))
+graph TB
+    %% --- User Layer ---
+    User([User])
 
-    %% External Cloud Services
-    subgraph Cloud Infrastructure
-        Firebase[(Firebase / Cloud Firestore)]
+    %% --- Presentation Layer ---
+    subgraph MobileApp [Mobile App - Flutter]
+        UI[App UI]
+        subgraph Modules [App Modules]
+            AWP[AI Writing Practice]
+            PAI[Practice with AI]
+            PWF[Practice with Friends]
+        end
+        subgraph ClientSDKs [Client SDKs]
+            AgoraClient[Agora RTC SDK]
+        end
     end
 
-    %% AI & Machine Learning Services
-    subgraph AI Models & Services
+    %% --- Backend Layer ---
+    subgraph Backend [Backend - Cloudflare Workers]
+        API[API Gateway]
+        AuthService[Auth Service]
+        Matchmaking[Matchmaking Engine]
+        PromptLayer[Prompt Engineering Layer]
+    end
+
+    %% --- Data Layer ---
+    subgraph Data [Data Layer]
+        Firestore[(Firebase Firestore<br/>NoSQL DB)]
+    end
+
+    %% --- Cloud AI Layer ---
+    subgraph CloudAI [Cloud AI Services]
         Gemini[Google Gemini AI]
-        HuggingFace[Hugging Face Spaces]
+        CloudSTT[Cloud STT<br/>Speech-to-Text]
+        CloudTTS[Cloud TTS<br/>Text-to-Speech]
     end
 
-    %% On-Device Capabilities
-    subgraph On-Device Features
-        ONNX[ONNX ML Models]
-        NativeSTT[Speech-to-Text]
-        NativeTTS[Text-to-Speech]
+    %% --- Live Communication Layer ---
+    subgraph LiveComm [Live Communication]
+        AgoraSDK[Agora SD-RTN<br/>Live Meeting Servers]
     end
 
     %% Connections
-    App <-->|User Auth & Cloud Data Storage| Firebase
-    App <-->|Text Evaluation & Conversational AI| Gemini
-    App <-->|Advanced AI Processing| HuggingFace
-    App <-->|Offline AI Inference| ONNX
-    
-    App -->|Records Voice Input| NativeSTT
-    NativeTTS -->|Plays Voice Output| App
+    User <--> UI
+
+    UI --> AWP & PAI & PWF
+
+    AWP -->|Text Input / Evaluation| API
+    PAI -->|Voice / Text Input| API
+    API -->|Prompts + Context| PromptLayer
+    PromptLayer -->|Structured Prompt| Gemini
+    Gemini -->|Feedback / Corrections| PromptLayer
+    PromptLayer -->|Refined Response| API
+
+    PAI -->|Audio Stream| CloudSTT
+    CloudSTT -->|Transcribed Text| API
+    API -->|Response Text| CloudTTS
+    CloudTTS -->|Audio Output| PAI
+
+    API <-->|CRUD Operations| Firestore
+
+    PWF -->|Join / Create Room| API
+    API -->|Match Request| Matchmaking
+    Matchmaking -->|Find Partner| API
+    PWF <-->|Live Audio/Video| AgoraClient
+    AgoraClient <-->|Real-time Media| AgoraSDK
 ```
 
 ## 2. Core Service Integrations
 
-The app relies on several key external and internal services to power its main modules:
+### Firebase Firestore (Data Layer)
+*   **Role:** Primary NoSQL database for the entire app.
+*   **Integration:** Stores user profiles, progress tracking, practice history, room metadata, and matchmaking queues. Accessed by the backend API via CRUD operations.
 
-### Firebase (Cloud Infrastructure)
-*   **Authentication:** Securely manages user sign-ups, logins, and identity verification.
-*   **Cloud Firestore:** Acts as the primary database. It stores user profiles, tracks progress (visualized on the Profile dashboard), and maintains practice history.
+### Google Gemini AI (Cloud AI)
+*   **Role:** Core LLM powering all AI-driven practice modules.
+*   **Usage:**
+    *   **AI Writing Practice** — evaluates written text, provides grammar corrections, and suggests improvements.
+    *   **Practice with AI** — drives conversational AI tutor with voice input/output.
+*   Both modules integrate through a **Prompt Engineering Layer** hosted on the backend, which structures prompts, manages context windows, and refines raw model responses before returning them to the app.
 
-### Google Gemini AI
-*   **Role:** The primary "brain" for language evaluation and conversation.
-*   **Integration:** The app communicates with Gemini to evaluate written text (Writing Practice), provide grammatical corrections, and power the conversational AI tutor (Chat Practice).
+### Cloud STT & TTS (Cloud AI)
+*   **Role:** Enable voice interactions in the Practice with AI module.
+*   **Integration:** Audio streams from the user are sent to cloud-based Speech-to-Text for transcription; AI responses are synthesized via cloud Text-to-Speech and streamed back as audio. Both models are hosted on cloud infrastructure (not on-device).
 
-### Hugging Face Spaces & On-Device AI (ONNX)
-*   **Role:** Specialized AI processing for audio and advanced interactions.
-*   **Integration:** Hugging Face endpoints can be used to provide advanced, specialized AI tasks. Additionally, the app uses ONNX to run machine learning models directly on the user's device, enabling faster responses and offline capabilities for specific AI tasks.
+### Agora SDK (Live Communication)
+*   **Role:** Real-time audio/video communication for Practice with Friends.
+*   **Integration:** The app embeds the Agora RTC SDK. When a user joins or creates a practice room, the app connects to Agora's SD-RTN (Software Defined Real-Time Network) servers to enable low-latency live meetings with matched partners.
 
-### Native Speech Services
-*   **Role:** Enabling voice interactions.
-*   **Integration:** The app utilizes device-native Speech-to-Text (STT) for capturing user speech in the "AI Model Speaker" module, and Text-to-Speech (TTS) to provide audible AI responses, creating a realistic, real-time conversational experience.
+### Matchmaking Engine (Backend)
+*   **Role:** Matchmaking logic for the Practice with Friends module.
+*   **Integration:** The backend (Cloudflare Workers) runs a matchmaking engine that pairs users based on language, proficiency level, and availability. Once matched, room metadata is stored in Firestore and Agora tokens are issued for the live session.
 
-## 3. High-Level User Flow Diagram
+## 3. High-Level User Flow Diagrams
 
-This diagram shows a typical, high-level interaction flow when a user engages with one of the AI practice modules.
+### AI Practice Flow (Writing / Practice with AI)
 
 ```mermaid
 sequenceDiagram
     actor User
     participant App as Mobile App
-    participant AI as Cloud AI (Gemini/HF)
-    participant Cloud as Firebase
+    participant Backend as Backend (Workers)
+    participant Prompt as Prompt Engineering Layer
+    participant AI as Cloud AI (Gemini)
+    participant STT as Cloud STT
+    participant TTS as Cloud TTS
+    participant DB as Firebase Firestore
 
-    User->>App: Initiates Practice Session (e.g. Chat/Writing)
-    App->>AI: Sends user input for processing & evaluation
-    AI-->>App: Returns feedback, corrections, or conversational response
-    App->>Cloud: Logs practice results & updates user progress dashboard
-    App-->>User: Displays text feedback or plays audio response
+    alt Practice with AI (Voice)
+        User->>App: Speaks into microphone
+        App->>STT: Sends audio stream
+        STT-->>App: Returns transcribed text
+    end
+
+    User->>App: Submits text (written or transcribed)
+    App->>Backend: Sends input + module context
+    Backend->>Prompt: Builds structured prompt
+    Prompt->>AI: Sends engineered prompt
+    AI-->>Prompt: Returns raw response
+    Prompt-->>Backend: Refines & formats response
+    Backend->>DB: Logs practice session & progress
+    Backend-->>App: Returns final feedback
+
+    alt Practice with AI (Voice)
+        App->>TTS: Sends response text
+        TTS-->>App: Returns synthesized audio
+        App-->>User: Plays audio response
+    else AI Writing Practice
+        App-->>User: Displays corrections & feedback
+    end
+```
+
+### Practice with Friends Flow
+
+```mermaid
+sequenceDiagram
+    actor User1
+    actor User2
+    participant App1 as User 1 App
+    participant App2 as User 2 App
+    participant Backend as Backend (Workers)
+    participant Match as Matchmaking Engine
+    participant DB as Firebase Firestore
+    participant Agora as Agora SD-RTN
+
+    User1->>App1: Opens Practice with Friends
+    App1->>Backend: Request match (language, level)
+    Backend->>Match: Enqueue User1
+    Match->>DB: Store match request
+
+    User2->>App2: Opens Practice with Friends
+    App2->>Backend: Request match (language, level)
+    Backend->>Match: Enqueue User2
+    Match->>DB: Find compatible partner
+
+    Match-->>Backend: User1 matched with User2
+    Backend-->>App1: Match found + Agora token
+    Backend-->>App2: Match found + Agora token
+    Backend->>DB: Create room document
+
+    App1->>Agora: Join room with token
+    App2->>Agora: Join room with token
+    Agora-->>App1: Live audio/video stream
+    Agora-->>App2: Live audio/video stream
+
+    User1->>App1: Speaks / Practices
+    App1->>Agora: Publishes media
+    Agora->>App2: Receives media
+
+    User2->>App2: Speaks / Practices
+    App2->>Agora: Publishes media
+    Agora->>App1: Receives media
 ```
