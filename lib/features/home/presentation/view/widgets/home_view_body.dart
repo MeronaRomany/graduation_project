@@ -4,14 +4,12 @@ import 'package:graduation_app/core/utils/assets.dart';
 import 'package:graduation_app/features/home/presentation/view/widgets/home_view_title_row.dart';
 import 'package:graduation_app/features/home/presentation/view/widgets/role_play_grid_view.dart';
 
-
 class HomeViewBody extends StatelessWidget {
   const HomeViewBody({
     super.key,
   });
 
-
-   @override
+  @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.ltr,
@@ -37,7 +35,9 @@ class HomeViewBody extends StatelessWidget {
                         height: 20,
                       ),
                       RolePlayGridView(),
-                      SizedBox(height: 80,),
+                      SizedBox(
+                        height: 80,
+                      ),
                     ],
                   ),
                 ),

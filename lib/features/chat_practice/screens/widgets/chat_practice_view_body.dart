@@ -12,6 +12,7 @@ import 'package:graduation_app/features/chat_practice/screens/widgets/ice_breake
 import 'package:graduation_app/features/chat_practice/screens/widgets/section_header.dart';
 import 'package:graduation_app/features/chat_practice/screens/widgets/user_card.dart';
 import 'package:graduation_app/models/user_model_auth.dart';
+import 'package:graduation_app/core/utils/app_colors.dart';
 
 class ChatPracticeViewBody extends StatelessWidget {
   const ChatPracticeViewBody({super.key});
@@ -68,7 +69,7 @@ class ChatPracticeViewBody extends StatelessWidget {
                                       : const Icon(Icons.people),
                                   label: Text(isLoading ? "Joining Waiting Room..." : "Enter Waiting State"),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFB5005B),
+                                    backgroundColor: AppColors.primaryColor,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(vertical: 14),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -90,7 +91,11 @@ class ChatPracticeViewBody extends StatelessWidget {
                               ),
                             );
                           }
-                          final users = snapshot.data ?? [];
+                          final List<UserModel> users = List.from(snapshot.data ?? []);
+                          const dummyUser = UserModel(uid: 'dummy_afraym', name: 'Afraym Herz', email: '', level: 'B1');
+                          if (!users.any((u) => u.uid == dummyUser.uid)) {
+                            users.insert(0, dummyUser);
+                          }
                           return SliverToBoxAdapter(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

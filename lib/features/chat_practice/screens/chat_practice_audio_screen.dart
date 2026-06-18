@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_app/features/chat_practice/screens/cubit/chat_practice_cubit.dart';
 import 'package:graduation_app/features/chat_practice/screens/cubit/chat_practice_state.dart';
+import 'package:graduation_app/features/chat_practice/screens/rate_call_screen.dart';
 
 class ChatPracticeAudioScreen extends StatelessWidget {
   static const String routeName = "ChatPracticeAudioScreen";
@@ -29,8 +30,14 @@ class ChatPracticeAudioScreen extends StatelessWidget {
                 SnackBar(content: Text(state.errMessage!)),
               );
             }
-            if (state.status == CallStatus.ended || state.status == CallStatus.failed) {
-              Navigator.of(context).pop();
+            if (state.status == CallStatus.ended) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => RateCallScreen(
+                    peerName: state.remoteUser?.name ?? 'Practice Partner',
+                  ),
+                ),
+              );
             }
           },
           builder: (context, state) {
@@ -63,15 +70,25 @@ class ChatPracticeAudioScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        state.status == CallStatus.connected 
-                            ? _formatDuration(state.duration) 
-                            : state.status.name.toUpperCase(),
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                          fontSize: 16,
+                      if (state.status == CallStatus.connected)
+                        Text(
+                          _formatDuration(state.duration),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 16,
+                          ),
+                        )
+                      else
+                        const Column(
+                          children: [
+                            CircularProgressIndicator(color: Colors.white),
+                            SizedBox(height: 16),
+                            Text(
+                              'Connecting...',
+                              style: TextStyle(color: Colors.white70, fontSize: 16),
+                            ),
+                          ],
                         ),
-                      ),
                     ],
                   ),
                 ),

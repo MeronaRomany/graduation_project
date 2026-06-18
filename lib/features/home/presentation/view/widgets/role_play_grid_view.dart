@@ -11,7 +11,9 @@ class RolePlayGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final availableLevels = CefrLevel.values
-        .where((level) => RolePlayScenario.getByCefrLevel(rolePlayScenarios, level).isNotEmpty)
+        .where((level) =>
+            RolePlayScenario.getByCefrLevel(rolePlayScenarios, level)
+                .isNotEmpty)
         .toList();
 
     return Column(
@@ -112,7 +114,8 @@ class RolePlayGridView extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         ...availableLevels.map((level) {
-          final levelScenarios = RolePlayScenario.getByCefrLevel(rolePlayScenarios, level);
+          final levelScenarios =
+              RolePlayScenario.getByCefrLevel(rolePlayScenarios, level);
           return _buildLevelSection(context, level, levelScenarios);
         }),
       ],
@@ -138,7 +141,8 @@ class RolePlayGridView extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: scenarios.first.cefrColor,
                   borderRadius: BorderRadius.circular(8),

@@ -6,6 +6,7 @@ import 'package:graduation_app/features/chat_practice/screens/cubit/chat_practic
 import 'package:graduation_app/features/chat_practice/screens/cubit/chat_practice_state.dart';
 import 'package:graduation_app/features/chat_practice/screens/widgets/glass_card.dart';
 import 'package:graduation_app/models/user_model_auth.dart';
+import 'package:graduation_app/core/utils/app_colors.dart';
 
 class UserCard extends StatelessWidget {
   final UserModel user;
@@ -81,14 +82,14 @@ class UserCard extends StatelessWidget {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Color(0xFFB5005B),
+                          color: AppColors.primaryColor,
                         ),
                       )
                     : const Icon(Icons.mic_none_outlined, size: 18),
                 label: Text(isLoading ? "Joining..." : "Join Call"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(247, 255, 255, 255),
-                  foregroundColor: const Color(0xFFB5005B),
+                  foregroundColor: AppColors.primaryColor,
                   shadowColor: Colors.black,
                   elevation: .01,
                   shape: const StadiumBorder(),
