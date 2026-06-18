@@ -14,6 +14,7 @@ class HomeViewTitleRow extends StatelessWidget {
   });
   FireStoreService userStore=FireStoreService();
   final currentUser = FirebaseAuth.instance.currentUser!;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -74,4 +75,3 @@ class HomeViewTitleRow extends StatelessWidget {
     );
   }
 }
-
