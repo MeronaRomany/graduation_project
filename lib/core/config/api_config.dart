@@ -1,7 +1,8 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 // API Configuration
-// Add your Gemini API key here
+// Read your Gemini API key from .env file
 
 class APIConfig {
-  static const String geminiApiKey =
-      'AQ.Ab8RN6Kd0hZSWW4YSE8yyCQ_EYIi7qhEpnYJiSXWFYzPCYNXag';
+  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 }
