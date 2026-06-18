@@ -57,93 +57,125 @@ graph TB
 ## 2. Use Case Diagram
 
 ```mermaid
-graph LR
+graph TB
     classDef actor fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef system fill:#fff,stroke:#333,stroke-width:2px
+    classDef include fill:#fff3e0,stroke:#e65100,stroke-dasharray: 5 5
+    classDef extend fill:#e8f5e9,stroke:#2e7d32,stroke-dasharray: 5 5
 
     User([User])
-    
-    subgraph System[Fluentify App]
-        direction TB
-        UC1(Sign Up)
-        UC2(Sign In)
-        UC3(Sign In with Google)
-        UC4(Reset Password)
-        UC5(Browse Role-Play Scenarios)
-        UC6(Create Custom Scenario)
-        UC7(Start AI Conversation)
-        UC8(Speak & Receive Voice Response)
-        UC9(Finish Session & Get Evaluation)
-        UC10(Enter Waiting Room)
-        UC11(Find a Partner)
-        UC12(Join Voice Call)
-        UC13(Submit Writing for Analysis)
-        UC14(View Writing Analysis)
-        UC15(View Profile)
-        UC16(Edit Profile)
-        UC17(View Progress & Insights)
-        UC18(View Score Trends)
-        UC19(View Session History)
-        UC20(Toggle Dark Mode)
-        UC21(Select Voice Engine)
-        UC22(Mute / Unmute)
-        UC23(Leave Call)
-        UC24(Reset Conversation)
+
+    subgraph Authentication[Authentication]
+        A1(Sign Up)
+        A2(Sign In)
+        A3(Sign In with Google)
+        A4(Reset Password)
+        A5(Sign Out)
+    end
+
+    subgraph AIPractice[AI Conversation Practice]
+        B1(Browse Role-Play Scenarios)
+        B2(Create Custom Scenario)
+        B3(Start AI Conversation)
+        B4(Speak via Microphone)
+        B5(Receive AI Voice Response)
+        B6(Finish Session & Get Evaluation)
+        B7(Interrupt AI Speaking)
+        B8(Reset Conversation)
+    end
+
+    subgraph WritingPractice[Writing Practice]
+        C1(Select Writing Scenario)
+        C2(Submit Writing for Analysis)
+        C3(View Writing Analysis)
+    end
+
+    subgraph FriendPractice[Friend Practice]
+        D1(View Peer Dashboard)
+        D2(Enter Waiting Room)
+        D3(Find a Partner)
+        D4(Join Voice Call)
+        D5(Mute / Unmute)
+        D6(Leave Call)
+    end
+
+    subgraph ProfileProgress[Profile & Progress]
+        E1(View Profile)
+        E2(Edit Profile)
+        E3(View Progress & Insights)
+        E4(View Score Trends)
+        E5(View Session History)
+        E6(View Analysis Dashboard)
+        E7(View Help & Support)
+    end
+
+    subgraph AppSettings[App Settings]
+        F1(Toggle Dark Mode)
+        F2(Select Voice Engine)
     end
 
     Gemini(Google Gemini AI)
-    Firebase(Firebase Auth + Firestore)
+    FirebaseAuth(Firebase Auth)
+    Firestore(Firebase Firestore)
     Agora(Agora SD-RTN)
-    Speech(Cloud STT / TTS)
+    CloudSTT(Cloud STT)
+    CloudTTS(Cloud TTS)
+    LocalONNX(Local ONNX Engine)
 
-    User --> UC1
-    User --> UC2
-    User --> UC3
-    User --> UC4
-    User --> UC5
-    User --> UC6
-    User --> UC7
-    User --> UC8
-    User --> UC9
-    User --> UC10
-    User --> UC11
-    User --> UC12
-    User --> UC13
-    User --> UC14
-    User --> UC15
-    User --> UC16
-    User --> UC17
-    User --> UC18
-    User --> UC19
-    User --> UC20
-    User --> UC21
-    User --> UC22
-    User --> UC23
-    User --> UC24
+    User --> A1 & A2 & A3 & A4 & A5
+    User --> B1 & B2 & B3 & B4 & B5 & B6 & B7 & B8
+    User --> C1 & C2 & C3
+    User --> D1 & D2 & D3 & D4 & D5 & D6
+    User --> E1 & E2 & E3 & E4 & E5 & E6 & E7
+    User --> F1 & F2
 
-    UC1 --> Firebase
-    UC2 --> Firebase
-    UC3 --> Firebase
-    UC4 --> Firebase
-    UC9 --> Gemini
-    UC9 --> Firebase
-    UC7 --> Gemini
-    UC7 --> Speech
-    UC8 --> Speech
-    UC13 --> Gemini
-    UC14 --> Gemini
-    UC10 --> Firebase
-    UC11 --> Firebase
-    UC12 --> Agora
-    UC12 --> Firebase
-    UC15 --> Firebase
-    UC16 --> Firebase
-    UC17 --> Firebase
-    UC18 --> Firebase
-    UC19 --> Firebase
-    UC22 --> Agora
-    UC23 --> Agora
-    UC23 --> Firebase
+    C2 -.->|<<include>>| C1
+    D2 -.->|<<include>>| D3
+    D4 -.->|<<include>>| D3
+    E3 -.->|<<include>>| E4
+    E3 -.->|<<include>>| E5
+
+    B4 -.->|<<extend>>| B7
+    B3 -.->|<<extend>>| B8
+    D4 -.->|<<extend>>| D5
+    D4 -.->|<<extend>>| D6
+
+    A1 --> FirebaseAuth
+    A2 --> FirebaseAuth
+    A3 --> FirebaseAuth
+    A4 --> FirebaseAuth
+    A5 --> FirebaseAuth
+
+    A1 --> Firestore
+
+    B3 --> Gemini
+    B5 --> Gemini
+    B6 --> Gemini
+
+    B4 --> CloudSTT
+    B4 --> LocalONNX
+
+    B5 --> CloudTTS
+    B5 --> LocalONNX
+
+    C2 --> Gemini
+
+    D4 --> Agora
+    D5 --> Agora
+    D6 --> Agora
+
+    B6 --> Firestore
+    C2 --> Firestore
+    D2 --> Firestore
+    D3 --> Firestore
+    D4 --> Firestore
+    D6 --> Firestore
+    E1 --> Firestore
+    E2 --> Firestore
+    E3 --> Firestore
+    E4 --> Firestore
+    E5 --> Firestore
+    E6 --> Firestore
 ```
 
 ## 3. Core Service Integrations
