@@ -1,0 +1,12 @@
+transformers>=4.35.0
+datasets>=2.14.0
+soundfile
+librosa
+accelerate>=0.21.0
+speechbrain
+jiwer
+evaluate
+torch
+torchaudio
+fastapi
+uvicorn
