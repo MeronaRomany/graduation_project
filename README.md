@@ -54,7 +54,99 @@ graph TB
     AgoraCli <--> Agora
 ```
 
-## 2. Core Service Integrations
+## 2. Use Case Diagram
+
+```mermaid
+graph LR
+    classDef actor fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef system fill:#fff,stroke:#333,stroke-width:2px
+
+    User([User])
+    
+    subgraph System[Fluentify App]
+        direction TB
+        UC1(Sign Up)
+        UC2(Sign In)
+        UC3(Sign In with Google)
+        UC4(Reset Password)
+        UC5(Browse Role-Play Scenarios)
+        UC6(Create Custom Scenario)
+        UC7(Start AI Conversation)
+        UC8(Speak & Receive Voice Response)
+        UC9(Finish Session & Get Evaluation)
+        UC10(Enter Waiting Room)
+        UC11(Find a Partner)
+        UC12(Join Voice Call)
+        UC13(Submit Writing for Analysis)
+        UC14(View Writing Analysis)
+        UC15(View Profile)
+        UC16(Edit Profile)
+        UC17(View Progress & Insights)
+        UC18(View Score Trends)
+        UC19(View Session History)
+        UC20(Toggle Dark Mode)
+        UC21(Select Voice Engine)
+        UC22(Mute / Unmute)
+        UC23(Leave Call)
+        UC24(Reset Conversation)
+    end
+
+    Gemini(Google Gemini AI)
+    Firebase(Firebase Auth + Firestore)
+    Agora(Agora SD-RTN)
+    Speech(Cloud STT / TTS)
+
+    User --> UC1
+    User --> UC2
+    User --> UC3
+    User --> UC4
+    User --> UC5
+    User --> UC6
+    User --> UC7
+    User --> UC8
+    User --> UC9
+    User --> UC10
+    User --> UC11
+    User --> UC12
+    User --> UC13
+    User --> UC14
+    User --> UC15
+    User --> UC16
+    User --> UC17
+    User --> UC18
+    User --> UC19
+    User --> UC20
+    User --> UC21
+    User --> UC22
+    User --> UC23
+    User --> UC24
+
+    UC1 --> Firebase
+    UC2 --> Firebase
+    UC3 --> Firebase
+    UC4 --> Firebase
+    UC9 --> Gemini
+    UC9 --> Firebase
+    UC7 --> Gemini
+    UC7 --> Speech
+    UC8 --> Speech
+    UC13 --> Gemini
+    UC14 --> Gemini
+    UC10 --> Firebase
+    UC11 --> Firebase
+    UC12 --> Agora
+    UC12 --> Firebase
+    UC15 --> Firebase
+    UC16 --> Firebase
+    UC17 --> Firebase
+    UC18 --> Firebase
+    UC19 --> Firebase
+    UC22 --> Agora
+    UC23 --> Agora
+    UC23 --> Firebase
+```
+
+## 3. Core Service Integrations
 
 ### Firebase Firestore (Data Layer)
 *   **Role:** Primary NoSQL database for the entire app.
@@ -79,7 +171,7 @@ graph TB
 *   **Role:** Matchmaking logic for the Practice with Friends module.
 *   **Integration:** The backend (Cloudflare Workers) runs a matchmaking engine that pairs users based on language, proficiency level, and availability. Once matched, room metadata is stored in Firestore and Agora tokens are issued for the live session.
 
-## 3. High-Level User Flow Diagrams
+## 4. High-Level User Flow Diagrams
 
 ### AI Practice Flow (Writing / Practice with AI)
 
