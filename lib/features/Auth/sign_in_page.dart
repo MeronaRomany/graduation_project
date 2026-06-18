@@ -279,7 +279,6 @@ class _SignInPageState extends State<SignInPage> {
                               onPressed: () async {
                                 await AuthWithGoogle.signInWithGoogle(context);
                                 Navigator.pushNamed(context, MainView.routeName);
-
                               },
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -368,7 +367,6 @@ class _SignInPageState extends State<SignInPage> {
 
 /// CUSTOM BORDER
 class LoginBorderPainter extends CustomPainter {
-  @override
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()

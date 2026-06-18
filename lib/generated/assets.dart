@@ -125,4 +125,3 @@ class AssetGenImage {
 
   String get keyName => _assetName;
 }
-

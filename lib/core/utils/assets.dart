@@ -55,4 +55,3 @@ class Assets {
   /// assets/translations/en.json
   static const String assetsTranslationsEn = "assets/translations/en.json";
 }
-
