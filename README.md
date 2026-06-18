@@ -8,71 +8,50 @@ This diagram illustrates the main connections between the user's device (the App
 
 ```mermaid
 graph TB
-    %% --- User Layer ---
+    classDef box font-size:16px,stroke-width:2px
+
     User([User])
 
-    %% --- Presentation Layer ---
-    subgraph MobileApp [Mobile App - Flutter]
-        UI[App UI]
-        subgraph Modules [App Modules]
-            AWP[AI Writing Practice]
-            PAI[Practice with AI]
-            PWF[Practice with Friends]
-        end
-        subgraph ClientSDKs [Client SDKs]
-            AgoraClient[Agora RTC SDK]
-        end
+    subgraph App[Mobile App]
+        AWP[AI Writing Practice]
+        PAI[Practice with AI]
+        PWF[Practice with Friends]
+        AgoraCli[Agora RTC SDK]
     end
 
-    %% --- Backend Layer ---
-    subgraph Backend [Backend - Cloudflare Workers]
+    subgraph Backend[Backend - Cloudflare Workers]
         API[API Gateway]
-        AuthService[Auth Service]
-        Matchmaking[Matchmaking Engine]
-        PromptLayer[Prompt Engineering Layer]
+        Match[Matchmaking Engine]
+        Prompt[Prompt Engineering Layer]
     end
 
-    %% --- Data Layer ---
-    subgraph Data [Data Layer]
-        Firestore[(Firebase Firestore<br/>NoSQL DB)]
-    end
+    Firestore[(Firebase Firestore<br/>NoSQL DB)]
+    Gemini[Google Gemini AI]
+    STT[Cloud STT]
+    TTS[Cloud TTS]
+    Agora[Agora SD-RTN<br/>Live Meeting Servers]
 
-    %% --- Cloud AI Layer ---
-    subgraph CloudAI [Cloud AI Services]
-        Gemini[Google Gemini AI]
-        CloudSTT[Cloud STT<br/>Speech-to-Text]
-        CloudTTS[Cloud TTS<br/>Text-to-Speech]
-    end
+    User --> AWP & PAI & PWF
 
-    %% --- Live Communication Layer ---
-    subgraph LiveComm [Live Communication]
-        AgoraSDK[Agora SD-RTN<br/>Live Meeting Servers]
-    end
+    AWP -->|text| API
+    PAI -->|voice / text| API
+    API --> Prompt
+    Prompt --> Gemini
+    Gemini --> Prompt
+    Prompt --> API
 
-    %% Connections
-    User <--> UI
+    PAI --> STT
+    STT --> API
+    API --> TTS
+    TTS --> PAI
 
-    UI --> AWP & PAI & PWF
+    API <--> Firestore
 
-    AWP -->|Text Input / Evaluation| API
-    PAI -->|Voice / Text Input| API
-    API -->|Prompts + Context| PromptLayer
-    PromptLayer -->|Structured Prompt| Gemini
-    Gemini -->|Feedback / Corrections| PromptLayer
-    PromptLayer -->|Refined Response| API
-
-    PAI -->|Audio Stream| CloudSTT
-    CloudSTT -->|Transcribed Text| API
-    API -->|Response Text| CloudTTS
-    CloudTTS -->|Audio Output| PAI
-
-    API <-->|CRUD Operations| Firestore
-
-    PWF -->|Join / Create Room| API
-    API -->|Match Request| Matchmaking
-    Matchmaking -->|Find Partner| API
-    PWF <-->|Live Audio/Video| AgoraClient
-    AgoraClient <-->|Real-time Media| AgoraSDK
+    PWF --> API
+    API --> Match
+    Match --> API
+    PWF <--> AgoraCli
+    AgoraCli <--> Agora
 ```
 
 ## 2. Core Service Integrations
