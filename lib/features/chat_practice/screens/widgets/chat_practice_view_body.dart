@@ -90,7 +90,11 @@ class ChatPracticeViewBody extends StatelessWidget {
                               ),
                             );
                           }
-                          final users = snapshot.data ?? [];
+                          final List<UserModel> users = List.from(snapshot.data ?? []);
+                          const dummyUser = UserModel(uid: 'dummy_afraym', name: 'Afraym Herz', email: '', level: 'B1');
+                          if (!users.any((u) => u.uid == dummyUser.uid)) {
+                            users.insert(0, dummyUser);
+                          }
                           return SliverToBoxAdapter(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

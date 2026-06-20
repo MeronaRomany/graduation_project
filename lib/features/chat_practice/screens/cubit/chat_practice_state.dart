@@ -8,7 +8,10 @@ class ChatPracticeState {
     this.isMuted = false ,
     this.duration = Duration.zero ,
     this.remoteLevelOfAudio = 0 ,
-    this.errMessage }
+    this.errMessage,
+    this.sessionStartTime,
+    this.isRemoteUserSpeaking = false,
+    this.peerConnectionQuality = 5 }
   );
 
   final CallStatus status;
@@ -17,6 +20,9 @@ class ChatPracticeState {
   final Duration duration;
   final int remoteLevelOfAudio;
   final String? errMessage;
+  final DateTime? sessionStartTime;
+  final bool isRemoteUserSpeaking;
+  final int peerConnectionQuality;
 
   ChatPracticeState copyWith({
     CallStatus? status,
@@ -26,6 +32,9 @@ class ChatPracticeState {
     Duration? duration,
     int? remoteLevelOfAudio,
     String? errMessage,
+    DateTime? sessionStartTime,
+    bool? isRemoteUserSpeaking,
+    int? peerConnectionQuality,
   }) {
     return ChatPracticeState(
       status: status ?? this.status,
@@ -35,6 +44,9 @@ class ChatPracticeState {
       duration: duration ?? this.duration,
       remoteLevelOfAudio: remoteLevelOfAudio ?? this.remoteLevelOfAudio,
       errMessage: errMessage ?? this.errMessage,
+      sessionStartTime: sessionStartTime ?? this.sessionStartTime,
+      isRemoteUserSpeaking: isRemoteUserSpeaking ?? this.isRemoteUserSpeaking,
+      peerConnectionQuality: peerConnectionQuality ?? this.peerConnectionQuality,
     );
   }
 }

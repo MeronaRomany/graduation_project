@@ -20,7 +20,14 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
       log("initChat already in progress or connected, skipping...");
       return;
     }
-    emit(state.copyWith(status: CallStatus.loading));
+    final dummyUser = const UserModel(
+        uid: 'dummy_afraym', name: 'Afraym Herz', email: '', level: 'B1');
+
+    emit(state.copyWith(
+      status: CallStatus.loading,
+      remoteUser: dummyUser,
+      sessionStartTime: DateTime.now(),
+    ));
 
     try {
       // Cancel any existing subscriptions to avoid memory leaks or duplicate events
@@ -35,11 +42,6 @@ class ChatPracticeCubit extends Cubit<ChatPracticeState> {
           case 2:
             newStatus = CallStatus.connected;
             _startTimer();
-
-            // Setup mock remote user for display
-            final remoteUser = const UserModel(
-                uid: 'remote_id', name: 'Practice Partner', email: '', level: 'A1');
-            emit(state.copyWith(remoteUser: remoteUser));
             break;
           case 3:
             newStatus = CallStatus.reconnecting;
