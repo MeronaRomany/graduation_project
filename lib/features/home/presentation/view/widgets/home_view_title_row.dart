@@ -13,7 +13,7 @@ class HomeViewTitleRow extends StatelessWidget {
     super.key,
   });
   FireStoreService userStore=FireStoreService();
-  final currentUser = FirebaseAuth.instance.currentUser!;
+  final currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +26,12 @@ class HomeViewTitleRow extends StatelessWidget {
             children: [
 
           FutureBuilder<UserModel?>(
-        future: userStore.getUserFromFireStore(currentUser.uid),
+        future: currentUser != null ? userStore.getUserFromFireStore(currentUser.uid) : null,
           builder: (context, snapshot) {
+            if (currentUser == null) {
+              return const SizedBox.shrink();
+            }
+
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
