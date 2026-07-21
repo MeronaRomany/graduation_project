@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:graduation_app/features/home/presentation/view/main_view.dart';
 class AuthWithGoogle{
 
  static Future<void> signInWithGoogle(BuildContext context) async {
