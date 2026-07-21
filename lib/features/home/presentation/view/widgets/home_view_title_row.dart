@@ -25,12 +25,11 @@ class HomeViewTitleRow extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
 
-          FutureBuilder<UserModel?>(
-        future: currentUser != null ? userStore.getUserFromFireStore(currentUser.uid) : null,
+          currentUser == null
+              ? const SizedBox.shrink()
+              : FutureBuilder<UserModel?>(
+        future: userStore.getUserFromFireStore(currentUser!.uid),
           builder: (context, snapshot) {
-            if (currentUser == null) {
-              return const SizedBox.shrink();
-            }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
