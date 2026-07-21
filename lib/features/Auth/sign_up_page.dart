@@ -1,8 +1,7 @@
-import 'dart:ui';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:graduation_app/features/Auth/sign_in_page.dart';
+import 'package:graduation_app/core/theme/colors_manager.dart';
 import '../../services/firestore_service.dart';
 import '../home/presentation/view/main_view.dart';
 
@@ -97,7 +96,7 @@ class _SignUpPageState extends State<SignUpPage>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -109,10 +108,12 @@ class _SignUpPageState extends State<SignUpPage>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              colorScheme.primary,
-              colorScheme.primary.withOpacity(0.6),
-              isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF8F9FD),
+              ColorsManager.primary,
+              ColorsManager.primary.withValues(alpha: 0.85),
+              ColorsManager.primary.withValues(alpha: 0.7),
+              colorScheme.surface,
             ],
+            stops: const [0.0, 0.3, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
@@ -124,303 +125,271 @@ class _SignUpPageState extends State<SignUpPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(height: size.height * 0.03),
+                    SizedBox(height: size.height * 0.05),
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: colorScheme.surface,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
+                          color: ColorsManager.primary,
+                          width: 4,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ColorsManager.primary.withValues(alpha: 0.3),
+                            blurRadius: 25,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
                       child: Icon(
-                        Icons.person_add_outlined,
-                        size: 40,
-                        color: Colors.white,
+                        Icons.person_add,
+                        size: 56,
+                        color: ColorsManager.primary,
                       ),
                     ),
-                    SizedBox(height: size.height * 0.025),
+                    SizedBox(height: size.height * 0.028),
                     Text(
                       'Create Account',
-                      style: TextStyle(
-                        fontSize: size.width * 0.07,
+                      style: textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
+                        color: colorScheme.onPrimary,
                       ),
                     ),
                     SizedBox(height: size.height * 0.006),
                     Text(
                       'Join us and start your journey',
-                      style: TextStyle(
-                        fontSize: size.width * 0.04,
-                        color: Colors.white.withOpacity(0.8),
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.onPrimary.withValues(alpha: 0.75),
                       ),
                     ),
-                    SizedBox(height: size.height * 0.04),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(
-                          padding: EdgeInsets.all(size.width * 0.06),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : Colors.white.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                  controller: _nameController,
-                                  textInputAction: TextInputAction.next,
-                                  validator: (v) => v == null || v.isEmpty
-                                      ? 'Please enter your full name'
-                                      : null,
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    fontSize: 16,
+                    SizedBox(height: size.height * 0.035),
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      color: colorScheme.surface,
+                      child: Padding(
+                        padding: EdgeInsets.all(size.width * 0.05),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _nameController,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) => v == null || v.isEmpty
+                                    ? 'Please enter your full name'
+                                    : null,
+                                style: textTheme.bodyLarge?.copyWith(
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Full Name',
+                                  prefixIcon: Icon(
+                                    Icons.person_outline_rounded,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Full Name',
-                                    prefixIcon:
-                                        const Icon(Icons.person_outline_rounded),
-                                    filled: true,
-                                    fillColor: isDark
-                                        ? Colors.white.withOpacity(0.08)
-                                        : Colors.white.withOpacity(0.6),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide.none,
+                                  filled: true,
+                                  fillColor: colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.outlineVariant,
                                     ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: Colors.white.withOpacity(0.2),
-                                      ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.primary,
+                                      width: 2,
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: colorScheme.primary,
-                                        width: 2,
-                                      ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.error,
                                     ),
-                                    errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: colorScheme.error,
-                                      ),
-                                    ),
-                                    labelStyle: TextStyle(
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.grey[600],
-                                    ),
-                                    prefixIconColor: isDark
-                                        ? Colors.white60
-                                        : Colors.grey[600],
+                                  ),
+                                  labelStyle: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                                SizedBox(height: size.height * 0.018),
-                                TextFormField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  textInputAction: TextInputAction.next,
-                                  validator: (v) {
-                                    if (v == null || v.isEmpty) {
-                                      return 'Please enter your email';
-                                    }
-                                    if (!RegExp(
-                                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                        .hasMatch(v)) {
-                                      return 'Please enter a valid email';
-                                    }
-                                    return null;
-                                  },
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    fontSize: 16,
+                              ),
+                              SizedBox(height: size.height * 0.016),
+                              TextFormField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'Please enter your email';
+                                  }
+                                  if (!RegExp(
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                      .hasMatch(v)) {
+                                    return 'Please enter a valid email';
+                                  }
+                                  return null;
+                                },
+                                style: textTheme.bodyLarge?.copyWith(
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                  prefixIcon: Icon(
+                                    Icons.email_outlined,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Email',
-                                    prefixIcon:
-                                        const Icon(Icons.email_outlined),
-                                    filled: true,
-                                    fillColor: isDark
-                                        ? Colors.white.withOpacity(0.08)
-                                        : Colors.white.withOpacity(0.6),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide.none,
+                                  filled: true,
+                                  fillColor: colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.outlineVariant,
                                     ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: Colors.white.withOpacity(0.2),
-                                      ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.primary,
+                                      width: 2,
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: colorScheme.primary,
-                                        width: 2,
-                                      ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.error,
                                     ),
-                                    errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: colorScheme.error,
-                                      ),
-                                    ),
-                                    labelStyle: TextStyle(
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.grey[600],
-                                    ),
-                                    prefixIconColor: isDark
-                                        ? Colors.white60
-                                        : Colors.grey[600],
+                                  ),
+                                  labelStyle: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                                SizedBox(height: size.height * 0.018),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  obscureText: !_isPasswordVisible,
-                                  textInputAction: TextInputAction.done,
-                                  onFieldSubmitted: (_) => _signUp(),
-                                  validator: (v) {
-                                    if (v == null || v.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    if (v.length < 6) {
-                                      return 'Password must be at least 6 characters';
-                                    }
-                                    return null;
-                                  },
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    fontSize: 16,
+                              ),
+                              SizedBox(height: size.height * 0.016),
+                              TextFormField(
+                                controller: _passwordController,
+                                obscureText: !_isPasswordVisible,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _signUp(),
+                                validator: (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'Please enter your password';
+                                  }
+                                  if (v.length < 6) {
+                                    return 'Password must be at least 6 characters';
+                                  }
+                                  return null;
+                                },
+                                style: textTheme.bodyLarge?.copyWith(
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  prefixIcon: Icon(
+                                    Icons.lock_outline_rounded,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    prefixIcon:
-                                        const Icon(Icons.lock_outline_rounded),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _isPasswordVisible
-                                            ? Icons.visibility_off_rounded
-                                            : Icons.visibility_rounded,
-                                      ),
-                                      onPressed: () => setState(
-                                        () => _isPasswordVisible =
-                                            !_isPasswordVisible,
-                                      ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _isPasswordVisible
+                                          ? Icons.visibility_off_rounded
+                                          : Icons.visibility_rounded,
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
-                                    filled: true,
-                                    fillColor: isDark
-                                        ? Colors.white.withOpacity(0.08)
-                                        : Colors.white.withOpacity(0.6),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide.none,
+                                    onPressed: () => setState(
+                                      () => _isPasswordVisible =
+                                          !_isPasswordVisible,
                                     ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: Colors.white.withOpacity(0.2),
-                                      ),
+                                  ),
+                                  filled: true,
+                                  fillColor: colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.outlineVariant,
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: colorScheme.primary,
-                                        width: 2,
-                                      ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.primary,
+                                      width: 2,
                                     ),
-                                    errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(
-                                        color: colorScheme.error,
-                                      ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.error,
                                     ),
-                                    labelStyle: TextStyle(
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.grey[600],
-                                    ),
-                                    prefixIconColor: isDark
-                                        ? Colors.white60
-                                        : Colors.grey[600],
-                                    suffixIconColor: isDark
-                                        ? Colors.white60
-                                        : Colors.grey[600],
+                                  ),
+                                  labelStyle: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                                SizedBox(height: size.height * 0.025),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 54,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          colorScheme.primary,
-                                          colorScheme.primary
-                                              .withOpacity(0.8),
-                                        ],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: colorScheme.primary
-                                              .withOpacity(0.4),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
+                              ),
+                              SizedBox(height: size.height * 0.025),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _signUp,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: ColorsManager.primary,
+                                    disabledBackgroundColor:
+                                        ColorsManager.primary
+                                            .withValues(alpha: 0.4),
+                                    foregroundColor: Colors.white,
+                                    disabledForegroundColor:
+                                        Colors.white.withValues(alpha: 0.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    elevation: 0,
+                                    shadowColor: Colors.transparent,
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          'Sign Up',
+                                          style:
+                                              textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                    child: ElevatedButton(
-                                      onPressed: _isLoading ? null : _signUp,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        shadowColor: Colors.transparent,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                        ),
-                                      ),
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Text(
-                                              'Sign Up',
-                                              style: TextStyle(
-                                                fontSize: size.width * 0.045,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -431,9 +400,8 @@ class _SignUpPageState extends State<SignUpPage>
                       children: [
                         Text(
                           'Already have an account? ',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: size.width * 0.036,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         TextButton(
@@ -442,16 +410,15 @@ class _SignUpPageState extends State<SignUpPage>
                             SignInPage.routeName,
                           ),
                           style: TextButton.styleFrom(
-                            foregroundColor: Colors.white,
+                            foregroundColor: colorScheme.primary,
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
                             'Sign In',
-                            style: TextStyle(
+                            style: textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: size.width * 0.038,
                               decoration: TextDecoration.underline,
                             ),
                           ),
