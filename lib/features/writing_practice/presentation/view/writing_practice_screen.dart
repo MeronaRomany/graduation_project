@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/colors_manager.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../home/data/models/role_play_scenario.dart';
+import '../../../home/presentation/view/widgets/custom_scenario_bottom_sheet.dart';
 import '../cubit/writing_practice_cubit.dart';
 import '../cubit/writing_practice_state.dart';
 import 'writing_analysis_screen.dart';
@@ -31,6 +32,11 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
       appBar: AppBar(
         title: const Text('AI Writing Practice'),
         centerTitle: true,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => CustomScenarioBottomSheet.show(context),
+        backgroundColor: ColorsManager.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: BlocConsumer<WritingPracticeCubit, WritingPracticeState>(
         listener: (context, state) {

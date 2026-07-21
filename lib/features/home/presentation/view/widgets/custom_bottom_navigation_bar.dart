@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:graduation_app/core/theme/colors_manager.dart';
-import 'package:graduation_app/features/home/presentation/view/widgets/custom_scenario_bottom_sheet.dart';
+import 'package:graduation_app/core/utils/app_colors.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   const CustomBottomNavigationBar(
@@ -36,7 +35,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
             children: [
               _buildNavItem(0, 'Home', Icons.home_outlined, Icons.home),
               _buildNavItem(1, 'Chat', Icons.chat_bubble_outline, Icons.chat_bubble),
-              _buildPlusButton(context),
               _buildNavItem(2, 'Writing', Icons.edit_outlined, Icons.edit),
             ],
           ),
@@ -54,7 +52,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? ColorsManager.primary : Colors.transparent,
+            color: isSelected ? AppColors.primaryColor : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Row(
@@ -62,7 +60,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             children: [
               Icon(
                 isSelected ? activeIcon : icon,
-                color: isSelected ? Colors.white : ColorsManager.primary,
+                color: isSelected ? Colors.white : AppColors.primaryColor,
                 size: 20,
               ),
               const SizedBox(width: 6),
@@ -71,7 +69,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : ColorsManager.primary,
+                    color: isSelected ? Colors.white : AppColors.primaryColor,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     fontSize: 14,
                   ),
@@ -84,29 +82,4 @@ class CustomBottomNavigationBar extends StatelessWidget {
     );
   }
 
-  Widget _buildPlusButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => CustomScenarioBottomSheet.show(context),
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: ColorsManager.primary,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: ColorsManager.primary.withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 32,
-        ),
-      ),
-    );
-  }
 }
