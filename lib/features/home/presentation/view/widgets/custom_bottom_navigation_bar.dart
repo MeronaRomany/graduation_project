@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:graduation_app/core/utils/app_colors.dart';
+import 'package:graduation_app/core/theme/colors_manager.dart';
 import 'package:graduation_app/features/home/presentation/view/widgets/custom_scenario_bottom_sheet.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
@@ -54,7 +54,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryColor : Colors.transparent,
+            color: isSelected ? ColorsManager.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Row(
@@ -62,7 +62,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             children: [
               Icon(
                 isSelected ? activeIcon : icon,
-                color: isSelected ? Colors.white : AppColors.primaryColor,
+                color: isSelected ? Colors.white : ColorsManager.primary,
                 size: 20,
               ),
               const SizedBox(width: 6),
@@ -71,7 +71,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.primaryColor,
+                    color: isSelected ? Colors.white : ColorsManager.primary,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     fontSize: 14,
                   ),
@@ -91,11 +91,11 @@ class CustomBottomNavigationBar extends StatelessWidget {
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: AppColors.primaryColor,
+          color: ColorsManager.primary,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryColor.withOpacity(0.4),
+              color: ColorsManager.primary.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
